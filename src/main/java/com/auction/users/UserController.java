@@ -1,18 +1,12 @@
 package com.auction.users;
-
 import org.springframework.web.bind.annotation.RestController;
-
-import com.auction.users.dto.RegisterRequest;
-
+import com.auction.users.dto.*;
 import jakarta.validation.Valid;
-
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+
 
 
 @RestController
@@ -23,9 +17,9 @@ public class UserController {
         this.userService = userService;
     }
     @PostMapping("/signin")
-    String signIn(@Valid @RequestBody RegisterRequest request) {
-        // ResponseEntity<String> serviceResponse = 
-        return "User Created";
+    public ResponseEntity<UserResponse> signIn(@Valid @RequestBody RegisterRequest request) {
+        UserResponse serviceResponse = userService.userSignin(request);
+        return ResponseEntity.ok(serviceResponse);
     }
     
 }
