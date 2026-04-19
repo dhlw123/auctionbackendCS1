@@ -40,7 +40,7 @@ public class JwtUtil {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {
-            System.err.printf("JWT validation error: {}", e.getMessage());
+            System.err.printf("JWT validation error: %s", e.getMessage());
 
         }
         return false;

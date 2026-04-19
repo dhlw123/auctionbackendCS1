@@ -4,8 +4,6 @@ import java.io.IOException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,8 +19,7 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
 
-    public JwtSecurityFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService,
-            SecurityFilterChain filterChain, PasswordEncoder passwordEncoder) {
+    public JwtSecurityFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
 
@@ -33,12 +30,7 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String encodedToken = parseJwt(request);
-            if (encodedToken == null) {
-                filterChain.doFilter(request, response);
-                return;
-
-            }
-            if (jwtUtil.validateJwtToken(encodedToken)) {
+           if (jwtUtil.validateJwtToken(encodedToken)) {
                 String username = jwtUtil.getUserFromToken(encodedToken);
                 UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -60,5 +52,12 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
         }
         return null;
 
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+
+        return path.equals("/users/login") || path.equals("/users/signin");
     }
 }
