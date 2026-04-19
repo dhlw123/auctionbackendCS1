@@ -3,36 +3,37 @@ package com.auction.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import com.auction.security.JwtSecurityFilter;
 
 @Configuration
 public class SecurityConfig {
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    private final JwtSecurityFilter jwtSecurityFilter;
+
+    public SecurityConfig(JwtSecurityFilter jwtSecurityFilter) {
+        this.jwtSecurityFilter = jwtSecurityFilter;
     }
-    //Put this here so you won't have any logins.
+
+    @Bean
+    public JwtSecurityFilter authenticationJwtTokenFilter() {
+        return jwtSecurityFilter;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Disable CSRF for easier testing
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll() // Allow all requests without login
-            )
-            .formLogin(login -> login.disable()) // Disable the login form
-            .httpBasic(basic -> basic.disable()); // Disable the basic auth popup
-            
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(s -> s.sessionCreationPolicy(
+                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/login", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/register")
+                        .permitAll()
+                        .anyRequest().authenticated());
+        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-    //check back on this later
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return new InMemoryUserDetailsManager();
-    }
 }
