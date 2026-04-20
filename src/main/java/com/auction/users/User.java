@@ -1,13 +1,12 @@
 package com.auction.users;
 
-import com.auction.common.BaseEntity;
 import com.auction.users.dto.UserResponse;
 
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "users")
-public class User{
+public class User {
     @Id
     @Column(unique = true, nullable = false)
     private String username;
@@ -17,7 +16,10 @@ public class User{
     @Column(nullable = false)
     private String hashedPassword;
     private Double balance;
-    User() {}
+
+    User() {
+    }
+
     public User(String username, String displayName, String hashedPassword, Double balance) {
         this.username = username;
         this.displayName = displayName;
@@ -28,19 +30,24 @@ public class User{
     public Double getBalance() {
         return balance;
     }
+
     public String getHashedPassword() {
         return hashedPassword;
     }
+
     public String getUsername() {
         return username;
     }
+
     public String getDisplayName() {
         return displayName;
     }
+
     public void updateDisplayName(String name) {
         displayName = name;
     }
+
     public UserResponse toResponse() {
-        return new UserResponse(getUsername(), getDisplayName(),getBalance());
+        return new UserResponse(getUsername(), getDisplayName(), getBalance());
     }
 }

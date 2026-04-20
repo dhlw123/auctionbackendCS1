@@ -1,8 +1,7 @@
 package com.auction.users;
 
-import org.apache.coyote.BadRequestException;
+import com.auction.security.JwtUtil;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -13,20 +12,36 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
+
     @Transactional
     public UserResponse userSignin(RegisterRequest request) {
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Username has already been taken"); 
+        String hashedPassword = passwordEncoder.encode(request.password());
+        if (userRepository.existsByUsername(request.username())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username has already been taken");
         }
-        User user = new User(request.getUsername(), request.getDisplayName(), hashedPassword, 0.0);
+        User user = new User(request.username(), request.displayName(), hashedPassword, 0.0);
         user = userRepository.save(user);
         return user.toResponse();
+    }
+
+    @Transactional
+    public AuthResponse userLogin(LoginRequest request) {
+        User user = userRepository.findByUsername(request.username())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password"));
+
+        if (!passwordEncoder.matches(request.password(), user.getHashedPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
+        }
+
+        return new AuthResponse("Login successful", jwtUtil.generateToken(user.getUsername()));
     }
 }
