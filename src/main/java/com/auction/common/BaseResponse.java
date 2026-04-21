@@ -1,6 +1,5 @@
 package com.auction.common;
 
-import java.util.Optional;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -9,8 +8,6 @@ public class BaseResponse {
     private boolean status;
 
     private String message;
-
-    private Optional item;
 
     public boolean getStatus() {
         return status;
@@ -37,7 +34,4 @@ public class BaseResponse {
         this.message = message;
     }
 
-    public void setItem(Optional item) {
-        this.item = item;
-    }
 }
