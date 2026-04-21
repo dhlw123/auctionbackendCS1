@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        maven { url 'https://repo.spring.io/release' }
+        maven { url = uri("https://repo.spring.io/release") }
     }
 }
-rootProject.name = 'auction'
+rootProject.name = "auction"
