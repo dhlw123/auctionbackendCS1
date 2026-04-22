@@ -42,6 +42,6 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
         }
 
-        return new AuthResponse("Login successful", jwtUtil.generateToken(user.getUsername()));
+        return new AuthResponse(true, "Login successful", jwtUtil.generateToken(user.getUsername()));
     }
 }

@@ -30,7 +30,7 @@ public class JwtSecurityFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         try {
             String encodedToken = parseJwt(request);
-           if (jwtUtil.validateJwtToken(encodedToken)) {
+            if (jwtUtil.validateJwtToken(encodedToken)) {
                 String username = jwtUtil.getUserFromToken(encodedToken);
                 UserDetailsImpl userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
