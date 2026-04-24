@@ -6,9 +6,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class AuctionApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-	//testing here...
+    @Test
+    void contextLoads() {
+    }
+    //testing here...
 
 }

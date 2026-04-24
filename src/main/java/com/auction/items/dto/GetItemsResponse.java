@@ -1,9 +1,9 @@
 package com.auction.items.dto;
 
-import java.util.List;
-
 import com.auction.common.BaseResponse;
 import com.auction.items.Item;
+
+import java.util.List;
 
 public class GetItemsResponse extends BaseResponse {
     List<Item> items;

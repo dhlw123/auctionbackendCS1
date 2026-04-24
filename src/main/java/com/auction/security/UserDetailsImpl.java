@@ -1,12 +1,11 @@
 package com.auction.security;
 
-import java.util.Collection;
-import java.util.Collections;
-
+import com.auction.users.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.auction.users.User;
+import java.util.Collection;
+import java.util.Collections;
 
 public class UserDetailsImpl implements UserDetails {
     private String username;
@@ -15,7 +14,7 @@ public class UserDetailsImpl implements UserDetails {
     private Collection<? extends GrantedAuthority> authorities;
 
     public UserDetailsImpl(String username, String displayName, Double balance,
-            Collection<? extends GrantedAuthority> authorities) {
+                           Collection<? extends GrantedAuthority> authorities) {
         this.username = username;
         this.displayName = displayName;
         this.balance = balance;

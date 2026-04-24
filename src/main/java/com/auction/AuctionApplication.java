@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication
 @RestController
 public class AuctionApplication {
-  // hello!!
-  public static void main(String[] args) {
-    System.out.println("Hello");
-    SpringApplication.run(AuctionApplication.class, args);
-  }
+    public static void main(String[] args) {
+        System.out.println("Hello");
+        SpringApplication.run(AuctionApplication.class, args);
+    }
 
-  @GetMapping("/hello")
-  public Integer hello(@RequestParam() Integer a, Integer b) {
-    return (a + b);
-  }
+    //welcome message
+    @GetMapping("/hello")
+    public String hello(@RequestParam(value = "name", defaultValue = "World") String name) {
+        return String.format("Hello %s!", name);
+    }
 }
