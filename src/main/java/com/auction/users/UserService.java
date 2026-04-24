@@ -40,6 +40,7 @@ public class UserService {
 
         if (!passwordEncoder.matches(request.password(), user.getHashedPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid username or password");
+
         }
 
         return new AuthResponse(true, "Login successful", jwtUtil.generateToken(user.getUsername()));
