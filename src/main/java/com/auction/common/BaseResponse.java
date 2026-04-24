@@ -20,7 +20,7 @@ public class BaseResponse {
         return status;
     }
 
-    ; // Empty Constructor so that Jackson can create and use the set methods to
+    // Empty Constructor so that Jackson can create and use the set methods to
     // inject data in
 
     public void setStatus(boolean status) {

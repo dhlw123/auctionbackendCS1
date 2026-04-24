@@ -34,7 +34,7 @@ public class SecurityConfig {
                         org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/login", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
-                                "/users/signin")
+                                "/users/register")
                         .permitAll()
                         .anyRequest().authenticated());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

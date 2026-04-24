@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/users")
 public class UserController {
-    private final UserService userService;
+    private UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    @PostMapping("/signin")
-    public ResponseEntity<UserResponse> signin(@Valid @RequestBody RegisterRequest request) {
-        UserResponse serviceResponse = userService.userSignin(request);
+    @PostMapping("/register")
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponse serviceResponse = userService.userRegister(request);
         return ResponseEntity.ok(serviceResponse);
     }
 

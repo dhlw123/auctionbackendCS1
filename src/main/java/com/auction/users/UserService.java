@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    private final JwtUtil jwtUtil;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private JwtUtil jwtUtil;
+    private UserRepository userRepository;
+    private PasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
@@ -23,7 +23,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse userSignin(RegisterRequest request) {
+    public UserResponse userRegister(RegisterRequest request) {
         String hashedPassword = passwordEncoder.encode(request.password());
         if (userRepository.existsByUsername(request.username())) {
             throw new UserException(false, "Username has already been taken");

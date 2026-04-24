@@ -6,7 +6,7 @@ public record RegisterRequest(
         @NotBlank(message = "username can't be blank") String username,
         @NotBlank(message = "display name can't be blank") String displayName,
         @NotBlank(message = "password can't be blank") String password) {
-};
+}
 
 // @NotBlank(message = "display name can't be blank")
 // private String displayName;
