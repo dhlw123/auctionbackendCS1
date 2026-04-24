@@ -1,0 +1,3 @@
+Role based authentication have not been implemented yet. Anyone with a valid token can use any API
+
+Check for cascading deletion
