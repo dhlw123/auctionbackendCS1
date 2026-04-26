@@ -16,6 +16,8 @@ public class JwtUtil {
     private String jwtSecret;
     @Value("${jwt.expiration}")
     private int jwtExpirationms;
+    @Value("${jwt.refreshExpiration}") // 7 days
+    private int jwtRefreshExpirationms;
 
     private SecretKey key;
 
@@ -24,9 +26,26 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Generates an access token for the given username.
+     *
+     * @param username The username to generate the token for.
+     * @return The generated access token.
+     */
     public String generateToken(String username) {
         return Jwts.builder().subject(username).issuedAt(new Date())
                 .expiration(new Date((new Date().getTime()) + jwtExpirationms)).signWith(key).compact();
+    }
+
+    /**
+     * Generates a refresh token for the given username.
+     *
+     * @param username The username to generate the token for.
+     * @return The generated refresh token.
+     */
+    public String generateRefreshToken(String username) {
+        return Jwts.builder().subject(username).issuedAt(new Date())
+                .expiration(new Date((new Date().getTime()) + jwtRefreshExpirationms)).signWith(key).compact();
     }
 
     public String getUserFromToken(String token) {

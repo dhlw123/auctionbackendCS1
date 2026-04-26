@@ -26,6 +26,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Configures the security filter chain.
+     *
+     * @param http The HttpSecurity object to configure.
+     * @return The configured SecurityFilterChain.
+     * @throws Exception If an error occurs during configuration.
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -33,9 +40,11 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(
                         org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Permit access to public endpoints
                         .requestMatchers("/users/login", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
-                                "/users/register")
+                                "/users/register", "/users/refresh")
                         .permitAll()
+                        // Authenticate all other requests
                         .anyRequest().authenticated());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
