@@ -1,6 +1,8 @@
 package com.auction.users;
 
 import com.auction.users.dto.UserResponse;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,6 +17,8 @@ public class User {
 
     @Column(nullable = false)
     private String displayName;
+
+    @JsonIgnore
     @Column(nullable = false)
     private String hashedPassword;
     private Double balance;
@@ -29,27 +33,40 @@ public class User {
         this.balance = balance;
     }
 
-    public Double getBalance() {
-        return balance;
-    }
-
-    public String getHashedPassword() {
-        return hashedPassword;
+    public UserResponse toResponse() {
+        return new UserResponse(getUsername(), getDisplayName(), getBalance());
     }
 
     public String getUsername() {
         return username;
     }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
     public String getDisplayName() {
         return displayName;
     }
 
-    public void updateDisplayName(String name) {
-        displayName = name;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
-    public UserResponse toResponse() {
-        return new UserResponse(getUsername(), getDisplayName(), getBalance());
+    public String getHashedPassword() {
+        return hashedPassword;
     }
+
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
+    public Double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
+    }
+
 }
