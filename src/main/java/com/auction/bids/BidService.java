@@ -3,7 +3,9 @@ package com.auction.bids;
 import java.time.Instant;
 import java.util.List;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.auction.bids.dto.BidPostRequest;
@@ -44,9 +46,12 @@ public class BidService {
         User userRef = userService.getUserReferenceByUsername(request.username());
         ItemStatus itemStatus = itemStatusService.getItemStatus(request.itemId());
 
-        if (request.bidAmount() < itemStatus.getStartingPrice()) {
+        // big amount must be higher than starting price and bid time must be lower than
+        // endtime
+        if (request.bidAmount() < itemStatus.getStartingPrice()
+                && Instant.now().toEpochMilli() < itemStatus.getEndTime()) {
             throw new BaseException(
-                    "Bid amount must be higher than " + Double.toString(itemStatus.getStartingPrice()));
+                    "Failed to bid");
         }
 
         // if bid exist then get bid from DB and then edit bid and save it again to db
@@ -85,11 +90,4 @@ public class BidService {
         return new BaseResponse(true, "Successfully bought item");
     }
 
-    @Transactional
-    public Page<Bid> getBidsByUser(String username) {
-        User userRef = userService.getUserReferenceByUsername(username);
-        Page<Bid> bids = bidRepository.findAllByUser(userRef);
-        return bids;
-
-    }
 }

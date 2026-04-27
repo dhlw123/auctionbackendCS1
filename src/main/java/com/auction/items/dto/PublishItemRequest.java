@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record PublishItemRequest(
-                @NotBlank String sellerUsername,
                 @NotBlank String title,
+                @NotNull String description,
                 @NotNull Long endTime,
                 @Positive @NotNull Double startingPrice,
                 @Positive @NotNull Double buyItNowPrice,

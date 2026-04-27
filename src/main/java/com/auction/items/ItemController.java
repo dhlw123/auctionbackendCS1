@@ -2,6 +2,7 @@ package com.auction.items;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +18,7 @@ import com.auction.items.dto.BaseItemResponse;
 import com.auction.items.dto.GetItemPagesResponse;
 import com.auction.items.dto.GetItemsResponse;
 import com.auction.items.dto.PublishItemRequest;
+import com.auction.security.UserDetailsImpl;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -35,16 +37,19 @@ public class ItemController {
     }
 
     @PostMapping("")
-    public ResponseEntity<BaseItemResponse> postItem(@Valid @RequestBody PublishItemRequest request) {
+    public ResponseEntity<BaseItemResponse> postItem(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
+            @Valid @RequestBody PublishItemRequest request) {
 
-        BaseItemResponse response = itemService.publishItem(request);
+        BaseItemResponse response = itemService.publishItem(request, userDetailsImpl.getUsername());
 
         return ResponseEntity.ok().body(response);
     }
 
     @DeleteMapping("/{itemId}")
-    public ResponseEntity<BaseResponse> deleteItem(@PathVariable Long itemId) {
-        BaseResponse response = itemService.deleteItem(itemId);
+    public ResponseEntity<BaseResponse> deleteItem(@PathVariable Long itemId,
+            @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
+
+        BaseResponse response = itemService.deleteItem(itemId, userDetailsImpl.getUsername());
         return ResponseEntity.ok().body(response);
     }
 
@@ -74,7 +79,17 @@ public class ItemController {
             @PathVariable Long itemId,
             @Min(0) @RequestParam(defaultValue = "0") int page,
             @Min(1) @Max(20) @RequestParam(defaultValue = "20") int size) {
-        BaseObjectResponse<Page<Item>> response = itemService.GetBidsOnItem(itemId, page, size);
+        BaseObjectResponse<Page<Item>> response = itemService.getBidsOnItem(itemId, page, size);
         return ResponseEntity.ok().body(response);
     }
+
+    @GetMapping("/listings/{username}")
+    public ResponseEntity<BaseObjectResponse<Page<Item>>> getListing(
+            @PathVariable String username,
+            @Min(0) @RequestParam(defaultValue = "0") int page,
+            @Min(1) @Max(20) @RequestParam(defaultValue = "10") int size) {
+        BaseObjectResponse<Page<Item>> request = itemService.getListingByUser(page, size, username);
+        return ResponseEntity.ok().body(request);
+    }
+
 }

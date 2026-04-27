@@ -1,17 +1,18 @@
 package com.auction.users;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.auction.bids.Bid;
-import com.auction.bids.BidService;
+import com.auction.bids.BidRepository;
 import com.auction.common.BaseObjectResponse;
-import com.auction.items.Item;
-import com.auction.items.ItemService;
-import com.auction.itemstatus.ItemStatusService;
+import com.auction.common.jointdata.BidAndItem;
 import com.auction.security.JwtUtil;
 import com.auction.users.dto.AuthResponse;
 import com.auction.users.dto.BalanceResponse;
@@ -20,25 +21,21 @@ import com.auction.users.dto.RegisterRequest;
 import com.auction.users.dto.UserResponse;
 import com.auction.users.exceptions.UserException;
 
-import jakarta.transaction.Transactional;
+import jakarta.transaction.Transactional;;;
 
 @Service
 public class UserService {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ItemService itemService;
-    private final ItemStatusService itemStatusService;
-    private final BidService bidService;
+    private final BidRepository bidRepository;
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
-            ItemService itemService, ItemStatusService itemStatusService, BidService bidService) {
+            BidRepository bidRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
-        this.itemService = itemService;
-        this.itemStatusService = itemStatusService;
-        this.bidService = bidService;
+        this.bidRepository = bidRepository;
     }
 
     @Transactional
@@ -97,8 +94,24 @@ public class UserService {
     }
 
     @Transactional
-    public BaseObjectResponse<Page<Bid>> getMyCurrentBids(String username) {
-        Page<Bid> bids = bidService.getBidsByUser(username);
+    public BaseObjectResponse<Page<Bid>> getMyCurrentBids(String username, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        User userRef = userRepository.getReferenceById(username);
+
+        Page<Bid> bids = bidRepository.findAllByUser(userRef, pageable);
+
         return new BaseObjectResponse<Page<Bid>>(true, "succesfully got my bids", bids);
+    }
+
+    @Transactional
+    public BaseObjectResponse<List<BidAndItem>> getMyWinnings(String username) {
+
+        List<Bid> bids = bidRepository.getWinsByUser(username, Instant.now().getEpochSecond());
+        ArrayList<BidAndItem> items = new ArrayList<BidAndItem>();
+        for (Bid bid : bids) {
+            items.add(new BidAndItem(bid, bid.getItem()));
+        }
+        return new BaseObjectResponse<List<BidAndItem>>(true, "sucesfully returned winnings", items);
+
     }
 }

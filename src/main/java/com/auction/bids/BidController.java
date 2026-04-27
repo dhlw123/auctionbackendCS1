@@ -15,10 +15,10 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/bids")
-public class BidDetailsController {
+public class BidController {
     private final BidService bidService;
 
-    public BidDetailsController(BidService bidService) {
+    public BidController(BidService bidService) {
         this.bidService = bidService;
     }
 
@@ -28,7 +28,7 @@ public class BidDetailsController {
         return ResponseEntity.ok().body(response);
     }
 
-    @PostMapping("/buynow/{itemId}")
+    @PostMapping("/buy-now/{itemId}")
     public ResponseEntity<BaseResponse> buyNow(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
             @PathVariable Long itemId) {
         BaseResponse response = bidService.buyItemNow(itemId, userDetailsImpl.getUsername());

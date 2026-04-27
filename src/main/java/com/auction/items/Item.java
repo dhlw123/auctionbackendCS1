@@ -28,12 +28,16 @@ public class Item {
     @Column(name = "title", nullable = false)
     private String title;
 
+    @Column(name = "description")
+    private String description;
+
     public Item() {
     }
 
-    public Item(User user, String title) {
+    public Item(User user, String title, String description) {
         this.user = user;
         this.title = title;
+        this.description = description;
     }
 
     public Long getItemId() {
@@ -54,6 +58,14 @@ public class Item {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
 }

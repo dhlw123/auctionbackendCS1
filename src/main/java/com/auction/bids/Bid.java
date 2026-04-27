@@ -1,6 +1,6 @@
 package com.auction.bids;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 import com.auction.items.Item;
 import com.auction.users.User;
@@ -38,11 +38,11 @@ public class Bid {
     private Double bidAmount;
 
     @Column(name = "bid_time")
-    private OffsetDateTime time;
+    private Long time;
 
     @PrePersist
     protected void addTime() {
-        time = OffsetDateTime.now();
+        time = Instant.now().toEpochMilli();
     }
 
     public Bid() {
@@ -86,11 +86,11 @@ public class Bid {
         this.bidAmount = bidAmount;
     }
 
-    public OffsetDateTime getTime() {
+    public Long getTime() {
         return time;
     }
 
-    public void setTime(OffsetDateTime time) {
+    public void setTime(Long time) {
         this.time = time;
     }
 

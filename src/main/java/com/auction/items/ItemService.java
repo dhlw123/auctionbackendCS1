@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import com.auction.common.BaseException;
 import com.auction.common.BaseObjectResponse;
 import com.auction.common.BaseResponse;
 import com.auction.items.dto.BaseItemResponse;
@@ -38,13 +39,13 @@ public class ItemService {
     }
 
     @Transactional
-    public BaseItemResponse publishItem(PublishItemRequest request) {
-        User user = userService.getUserReferenceByUsername(request.sellerUsername());
-        Item item = itemRepository.save(new Item(user, request.title()));
+    public BaseItemResponse publishItem(PublishItemRequest request, String username) {
+        User user = userService.getUserReferenceByUsername(username);
+        Item item = itemRepository.save(new Item(user, request.title(), request.description()));
 
         // Create Item Status along with the item
         itemStatusService.saveStatus(
-                new ItemStatus(item, 0.0, request.sellerUsername(), request.endTime(), request.startingPrice(),
+                new ItemStatus(item, 0.0, username, request.endTime(), request.startingPrice(),
                         request.buyItNowPrice(), request.bitIncrement()));
 
         return new BaseItemResponse(true, "Created new item.", item);
@@ -57,11 +58,16 @@ public class ItemService {
 
     // Consider if you want to do a Cascading Deletion here
     @Transactional
-    public BaseResponse deleteItem(Long itemId) {
-        itemRepository.findById(itemId)
+    public BaseResponse deleteItem(Long itemId, String username) {
+        Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemException(false, "There is no Item with that ID"));
         itemRepository.deleteById(itemId);
-        return new BaseResponse(true, "Item " + itemId + " was deleted");
+        if (item.getUser().getUsername().equals(username)) {
+            return new BaseResponse(true, "Item " + itemId + " was deleted");
+        } else {
+            throw new BaseException("You are not the owner of this item");
+        }
+
     }
 
     @Transactional
@@ -91,9 +97,17 @@ public class ItemService {
     }
 
     @Transactional
-    public BaseObjectResponse<Page<Item>> GetBidsOnItem(Long itemId, int page, int size) {
+    public BaseObjectResponse<Page<Item>> getBidsOnItem(Long itemId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("bids.bid_amount"));
         Page<Item> items = itemRepository.findBidsOnItem(pageable);
         return new BaseObjectResponse<Page<Item>>(true, "Succesfully get all bids", items);
+    }
+
+    @Transactional
+    public BaseObjectResponse<Page<Item>> getListingByUser(int page, int size, String username) {
+        User userRef = userService.getUserReferenceByUsername(username);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Item> items = itemRepository.findByUser(pageable, userRef);
+        return new BaseObjectResponse<Page<Item>>(true, "succesfully got listing", items);
     }
 }
