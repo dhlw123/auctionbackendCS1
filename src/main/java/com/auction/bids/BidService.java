@@ -40,10 +40,10 @@ public class BidService {
     }
 
     @Transactional
-    public BidPostResponse createBid(BidPostRequest request) {
+    public BidPostResponse createBid(BidPostRequest request, String username) {
         Bid bid;
         Item itemRef = itemService.getItemReferenceByItemId(request.itemId());
-        User userRef = userService.getUserReferenceByUsername(request.username());
+        User userRef = userService.getUserReferenceByUsername(username);
         ItemStatus itemStatus = itemStatusService.getItemStatus(request.itemId());
 
         // big amount must be higher than starting price and bid time must be lower than
@@ -66,7 +66,7 @@ public class BidService {
         // If user bid amount if higher than the current highest + increment, they would
         // be the highest bidder
         if (request.bidAmount() > itemStatus.getCurrentPrice() + itemStatus.getBidIncrement()) {
-            itemStatusService.updateStatus(itemRef, request.bidAmount(), request.username());
+            itemStatusService.updateStatus(itemRef, request.bidAmount(), username);
         }
         return new BidPostResponse(true, "Successfully created bid for an item", bid);
     }

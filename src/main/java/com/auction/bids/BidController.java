@@ -23,8 +23,10 @@ public class BidController {
     }
 
     @PostMapping("")
-    public ResponseEntity<BidPostResponse> makeBid(@Valid @RequestBody BidPostRequest request) {
-        BidPostResponse response = bidService.createBid(request);
+    public ResponseEntity<BidPostResponse> makeBid(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
+            @Valid @RequestBody BidPostRequest request) {
+
+        BidPostResponse response = bidService.createBid(request, userDetailsImpl.getUsername());
         return ResponseEntity.ok().body(response);
     }
 

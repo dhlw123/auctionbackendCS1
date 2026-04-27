@@ -5,5 +5,5 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public record BidPostRequest(
-        @NotNull Long itemId, @NotBlank String username, @Positive @NotNull Double bidAmount) {
+                @NotNull Long itemId, @Positive @NotNull Double bidAmount) {
 }
