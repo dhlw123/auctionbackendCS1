@@ -10,4 +10,4 @@ public class PublishItemResponse extends BaseResponse {
         super(status, message);
         this.item = item;
     }
-} 
+}
