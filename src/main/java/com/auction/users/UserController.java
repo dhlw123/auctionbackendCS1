@@ -22,14 +22,9 @@ import com.auction.bids.Bid;
 import com.auction.common.BaseObjectResponse;
 import com.auction.common.jointdata.BidAndItem;
 import com.auction.security.UserDetailsImpl;
-import com.auction.users.dto.AuthResponse;
 import com.auction.users.dto.BalanceResponse;
 import com.auction.users.dto.DepositRequest;
-import com.auction.users.dto.LoginRequest;
-import com.auction.users.dto.RegisterRequest;
-import com.auction.users.dto.UserResponse;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -54,18 +49,12 @@ public class UserController {
         return ResponseEntity.ok(serviceResponse);
     }
 
-    /**
-     * Endpoint to refresh an access token.
-     *
-     * @param request The refresh token request.
-     * @return A response entity containing the new access token.
-     */
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         AuthResponse serviceResponse = userService.refreshToken(request);
         return ResponseEntity.ok(serviceResponse);
     }
-    // API Endpoints for user
+
     @PostMapping("/me/deposit")
     public ResponseEntity<BalanceResponse> deposit(@AuthenticationPrincipal UserDetailsImpl userDetailsImpl,
             @Valid @RequestBody DepositRequest request) {

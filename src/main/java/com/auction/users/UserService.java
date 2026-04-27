@@ -30,23 +30,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final BidRepository bidRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+            RefreshTokenRepository refreshTokenRepository, BidRepository bidRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.refreshTokenRepository = refreshTokenRepository;
-    private final BidRepository bidRepository;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
-            BidRepository bidRepository) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
         this.bidRepository = bidRepository;
     }
 
-    @Transactional
     public UserResponse userRegister(RegisterRequest request) {
         String hashedPassword = passwordEncoder.encode(request.password());
         if (userRepository.existsByUsername(request.username())) {
@@ -57,12 +51,6 @@ public class UserService {
         return user.toResponse();
     }
 
-    /**
-     * Handles user login, generating both an access token and a refresh token.
-     *
-     * @param request The login request containing the user's credentials.
-     * @return An {@link AuthResponse} containing the access token and refresh token.
-     */
     @Transactional
     public AuthResponse userLogin(LoginRequest request) {
         User user = userRepository.findByUsername(request.username())
@@ -81,12 +69,6 @@ public class UserService {
         return new AuthResponse(true, "Login successful", token, refreshToken);
     }
 
-    /**
-     * Refreshes an access token using a refresh token.
-     *
-     * @param request The refresh token request.
-     * @return An {@link AuthResponse} containing the new access token and the original refresh token.
-     */
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         String refreshToken = request.refreshToken();
         return refreshTokenRepository.findByRefreshToken(refreshToken)
