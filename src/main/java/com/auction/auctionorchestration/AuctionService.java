@@ -1,5 +1,6 @@
 package com.auction.auctionorchestration;
 
+import com.auction.admin.AdminController;
 import com.auction.auctionorchestration.dto.AutoBidRequest;
 import com.auction.auctionorchestration.dto.BidPostRequest;
 import com.auction.bids.AutoBid;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuctionService {
 
+    private final AdminController adminController;
     private final ItemService itemService;
     private final UserService userService;
     private final ItemStatusService itemStatusService;
@@ -45,13 +47,14 @@ public class AuctionService {
             UserService userService,
             ItemStatusService itemStatusService,
             BidService bidService,
-            ItemPricesSink itemPricesSink
+            ItemPricesSink itemPricesSink, AdminController adminController
     ) {
         this.itemService = itemService;
         this.userService = userService;
         this.itemStatusService = itemStatusService;
         this.bidService = bidService;
         this.itemPricesSink = itemPricesSink;
+        this.adminController = adminController;
     }
 
     @Transactional
@@ -202,7 +205,19 @@ public class AuctionService {
         if (
                 !itemStatus.getHighestBidUser().equals(item.getUser().getUsername())
         ) {
-            userService.addBalance(itemStatus.getHighestBidUser(), itemStatus.getCurrentPrice());
+            if (bidService.getAutoBidByItemId(itemId).isPresent()) {
+                AutoBid autoBid = bidService.getAutoBidByItemId(itemId).get();
+                User autoBidder = autoBid.getBidder();
+                boolean isHighestBidderAutoBidding = itemStatus.getHighestBidUser().equals(autoBidder.getUsername());
+                if (isHighestBidderAutoBidding) {
+                    userService.addBalance(autoBidder.getUsername(), autoBid.getMaxBidLimit());
+                }
+                else {
+                    userService.addBalance(itemStatus.getHighestBidUser(), itemStatus.getCurrentPrice());
+                }
+            } else {
+                userService.addBalance(itemStatus.getHighestBidUser(), itemStatus.getCurrentPrice());
+            }
         }
 
         updateItemStatusHighestBidder(
@@ -243,7 +258,17 @@ public class AuctionService {
                 itemStatus,
                 request.maxBidLimit()
         );
-
+        // condition where no one has made a bid yet.
+        if (itemStatus.getCurrentPrice() == 0) {
+            currentAutoBid.setCurrentBidValue(itemStatus.getStartingPrice());
+            updateItemStatusHighestBidder(itemStatus, bidderName, itemStatus.getStartingPrice());
+            userService.deductBalance(bidderName, request.maxBidLimit());
+            itemStatusService.saveStatus(itemStatus); 
+            bidService.saveAutoBid(currentAutoBid);
+            itemPricesSink.publishPrice(request.itemId(), itemStatus.getCurrentPrice());
+            applyAntiBidExtension(itemStatus);
+            return new BaseResponse(true, "succesfully made autobid");
+        } 
         boolean isSameAutoBidder =
                 autoBidOP.isPresent() &&
                         autoBidOP.get().getBidder().getUsername().equals(bidderName);

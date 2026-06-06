@@ -8,16 +8,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import com.auction.admin.dto.UnbanRequest;
 import com.auction.auth.AuthService;
 import com.auction.auth.RevokedToken;
@@ -28,6 +18,15 @@ import com.auction.items.Item;
 import com.auction.items.ItemService;
 import com.auction.users.User;
 import com.auction.users.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AdminServiceTest {
@@ -51,13 +50,11 @@ class AdminServiceTest {
     private AdminService adminService;
 
     private User normalUser;
-    private User adminUser;
 
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(adminService, "banHash", "BANNED_HASH");
         normalUser = new User("baduser", "Bad User", "hashedpw", 1000.0);
-        adminUser = new User("admin", "Admin", "hashedpw", 0.0);
     }
 
     @Test
@@ -82,8 +79,9 @@ class AdminServiceTest {
     @DisplayName("Không cho phép khóa tài khoản admin")
     void banUser_AdminAccount_ThrowsException() {
         // Act & Assert
-        BaseException ex = assertThrows(BaseException.class,
-                () -> adminService.banUser("admin"));
+        BaseException ex = assertThrows(BaseException.class, () ->
+            adminService.banUser("admin")
+        );
         assertEquals("You can't ban admin", ex.getMessage());
     }
 
@@ -94,7 +92,9 @@ class AdminServiceTest {
         normalUser.setHashedPassword("BANNED_HASH"); // Đã bị ban
         UnbanRequest request = new UnbanRequest("baduser", "newpassword123");
         when(userService.getUserByUsername("baduser")).thenReturn(normalUser);
-        when(passwordEncoder.encode("newpassword123")).thenReturn("new_hashed_pw");
+        when(passwordEncoder.encode("newpassword123")).thenReturn(
+            "new_hashed_pw"
+        );
 
         // Act
         BaseResponse response = adminService.unbanUser(request);
@@ -113,10 +113,15 @@ class AdminServiceTest {
         Long itemId = 1L;
         User seller = new User("seller", "Seller", "hashedpw", 0.0);
         Item item = new Item(seller, "Test", "Desc");
-        BaseResponse cancelResponse = new BaseResponse(true, "Item successfully canceled.");
+        BaseResponse cancelResponse = new BaseResponse(
+            true,
+            "Item successfully canceled."
+        );
 
         when(itemService.getItem(itemId)).thenReturn(item);
-        when(itemService.cancelItem(itemId, "seller")).thenReturn(cancelResponse);
+        when(itemService.cancelItem(itemId, "seller")).thenReturn(
+            cancelResponse
+        );
 
         // Act
         BaseResponse response = adminService.cancelAuction(itemId);

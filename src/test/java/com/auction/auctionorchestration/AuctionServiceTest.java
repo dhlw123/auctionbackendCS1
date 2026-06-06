@@ -1,7 +1,6 @@
 package com.auction.auctionorchestration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -9,26 +8,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.auction.auctionorchestration.dto.AutoBidRequest;
 import com.auction.auctionorchestration.dto.BidPostRequest;
@@ -46,6 +25,24 @@ import com.auction.itemstatus.ItemStatus;
 import com.auction.itemstatus.ItemStatusService;
 import com.auction.users.User;
 import com.auction.users.UserService;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -95,17 +92,25 @@ class AuctionServiceTest {
         ReflectionTestUtils.setField(testItemStatus, "startingPrice", 1000.0);
         ReflectionTestUtils.setField(testItemStatus, "bidIncrement", 50.0);
         ReflectionTestUtils.setField(testItemStatus, "buyItNowPrice", 2000.0);
-        ReflectionTestUtils.setField(testItemStatus, "endTime",
-                Instant.now().toEpochMilli() + 3600000L); // 1 giờ từ bây giờ
-        ReflectionTestUtils.setField(testItemStatus, "maxEndTime",
-                Instant.now().toEpochMilli() + 7200000L); // 2 giờ max
+        ReflectionTestUtils.setField(
+            testItemStatus,
+            "endTime",
+            Instant.now().toEpochMilli() + 3600000L
+        ); // 1 giờ từ bây giờ
+        ReflectionTestUtils.setField(
+            testItemStatus,
+            "maxEndTime",
+            Instant.now().toEpochMilli() + 7200000L
+        ); // 2 giờ max
     }
 
     /**
      * Thiết lập mock chung cho các validation cơ bản (auction chưa kết thúc).
      */
     private void setupBasicValidationMocks() {
-        lenient().when(itemStatusService.auctionEndedOrNot(ITEM_ID)).thenReturn(false);
+        lenient()
+            .when(itemStatusService.auctionEndedOrNot(ITEM_ID))
+            .thenReturn(false);
     }
 
     // ========================================================================
@@ -124,16 +129,28 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
-            when(bidService.existUserAndItem(bidder1, testItem)).thenReturn(false);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.empty());
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
+            when(bidService.existUserAndItem(bidder1, testItem)).thenReturn(
+                false
+            );
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.empty()
+            );
 
             // Act
-            BaseObjectResponse<Bid> response = auctionService.createBid(request, "bidder1");
+            BaseObjectResponse<Bid> response = auctionService.createBid(
+                request,
+                "bidder1"
+            );
 
             // Assert
             assertTrue(response.getStatus());
-            assertEquals("Successfully created bid for an item", response.getMessage());
+            assertEquals(
+                "Successfully created bid for an item",
+                response.getMessage()
+            );
             verify(bidService).saveBid(any(Bid.class));
             verify(userService).deductBalance("bidder1", 1050.0);
         }
@@ -148,13 +165,24 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
-            when(bidService.existUserAndItem(bidder1, testItem)).thenReturn(true);
-            when(bidService.getBidByUserAndItem(bidder1, testItem)).thenReturn(existingBid);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.empty());
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
+            when(bidService.existUserAndItem(bidder1, testItem)).thenReturn(
+                true
+            );
+            when(bidService.getBidByUserAndItem(bidder1, testItem)).thenReturn(
+                existingBid
+            );
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.empty()
+            );
 
             // Act
-            BaseObjectResponse<Bid> response = auctionService.createBid(request, "bidder1");
+            BaseObjectResponse<Bid> response = auctionService.createBid(
+                request,
+                "bidder1"
+            );
 
             // Assert
             assertTrue(response.getStatus());
@@ -170,12 +198,18 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("seller")).thenReturn(seller);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
 
             // Act & Assert
-            BaseException ex = assertThrows(BaseException.class,
-                    () -> auctionService.createBid(request, "seller"));
-            assertEquals("You can't place bid on your own item", ex.getMessage());
+            BaseException ex = assertThrows(BaseException.class, () ->
+                auctionService.createBid(request, "seller")
+            );
+            assertEquals(
+                "You can't place bid on your own item",
+                ex.getMessage()
+            );
         }
 
         @Test
@@ -186,12 +220,18 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
 
             // Act & Assert
-            BaseException ex = assertThrows(BaseException.class,
-                    () -> auctionService.createBid(request, "bidder1"));
-            assertEquals("Your bid must be higher than the starting price", ex.getMessage());
+            BaseException ex = assertThrows(BaseException.class, () ->
+                auctionService.createBid(request, "bidder1")
+            );
+            assertEquals(
+                "Your bid must be higher than the starting price",
+                ex.getMessage()
+            );
         }
 
         @Test
@@ -202,12 +242,15 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(itemStatusService.auctionEndedOrNot(ITEM_ID)).thenReturn(true);
 
             // Act & Assert
-            BaseException ex = assertThrows(BaseException.class,
-                    () -> auctionService.createBid(request, "bidder1"));
+            BaseException ex = assertThrows(BaseException.class, () ->
+                auctionService.createBid(request, "bidder1")
+            );
             assertEquals("Auction has already ended", ex.getMessage());
         }
 
@@ -221,11 +264,14 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("poor")).thenReturn(poorBidder);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
 
             // Act & Assert
-            BaseException ex = assertThrows(BaseException.class,
-                    () -> auctionService.createBid(request, "poor"));
+            BaseException ex = assertThrows(BaseException.class, () ->
+                auctionService.createBid(request, "poor")
+            );
             assertEquals("You don't have enough money", ex.getMessage());
         }
 
@@ -240,12 +286,18 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
 
             // Act & Assert
-            BaseException ex = assertThrows(BaseException.class,
-                    () -> auctionService.createBid(request, "bidder1"));
-            assertEquals("Your bid must be higher than the current highest", ex.getMessage());
+            BaseException ex = assertThrows(BaseException.class, () ->
+                auctionService.createBid(request, "bidder1")
+            );
+            assertEquals(
+                "Your bid must be higher than the current highest",
+                ex.getMessage()
+            );
         }
 
         @Test
@@ -259,9 +311,15 @@ class AuctionServiceTest {
 
             when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
-            when(bidService.existUserAndItem(bidder1, testItem)).thenReturn(false);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.empty());
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
+            when(bidService.existUserAndItem(bidder1, testItem)).thenReturn(
+                false
+            );
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.empty()
+            );
 
             // Act
             auctionService.createBid(request, "bidder1");
@@ -287,12 +345,17 @@ class AuctionServiceTest {
             testItemStatus.setHighestBidUser("bidder2");
             setupBasicValidationMocks();
 
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
             when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
 
             // Act
-            BaseResponse response = auctionService.buyItemNow(ITEM_ID, "bidder1");
+            BaseResponse response = auctionService.buyItemNow(
+                ITEM_ID,
+                "bidder1"
+            );
 
             // Assert
             assertTrue(response.getStatus());
@@ -307,14 +370,20 @@ class AuctionServiceTest {
         @DisplayName("Mua ngay thất bại - Người bán không thể tự mua")
         void buyItemNow_SellerCannotBuy() {
             // Arrange
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(userService.getUserByUsername("seller")).thenReturn(seller);
             when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
 
             // Act & Assert
-            BaseException ex = assertThrows(BaseException.class,
-                    () -> auctionService.buyItemNow(ITEM_ID, "seller"));
-            assertEquals("You can't place bid on your own item", ex.getMessage());
+            BaseException ex = assertThrows(BaseException.class, () ->
+                auctionService.buyItemNow(ITEM_ID, "seller")
+            );
+            assertEquals(
+                "You can't place bid on your own item",
+                ex.getMessage()
+            );
         }
     }
 
@@ -333,12 +402,19 @@ class AuctionServiceTest {
             setupBasicValidationMocks();
 
             when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.empty());
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.empty()
+            );
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
 
             // Act
-            BaseResponse response = auctionService.createAutoBid(request, "bidder1");
+            BaseResponse response = auctionService.createAutoBid(
+                request,
+                "bidder1"
+            );
 
             // Assert
             assertTrue(response.getStatus());
@@ -350,17 +426,31 @@ class AuctionServiceTest {
         @DisplayName("Cùng người cập nhật tăng hạn mức Auto-Bid")
         void createAutoBid_SameUser_IncreasesLimit() {
             // Arrange
-            AutoBid existingAutoBid = new AutoBid(ITEM_ID, bidder1, 1500.0, 1050.0);
+            testItemStatus.setCurrentPrice(1050.0);
+            testItemStatus.setHighestBidUser("bidder1");
+            AutoBid existingAutoBid = new AutoBid(
+                ITEM_ID,
+                bidder1,
+                1500.0,
+                1050.0
+            );
             AutoBidRequest request = new AutoBidRequest(ITEM_ID, 2000.0);
             setupBasicValidationMocks();
 
             when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(existingAutoBid));
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.of(existingAutoBid)
+            );
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
 
             // Act
-            BaseResponse response = auctionService.createAutoBid(request, "bidder1");
+            BaseResponse response = auctionService.createAutoBid(
+                request,
+                "bidder1"
+            );
 
             // Assert
             assertTrue(response.getStatus());
@@ -372,17 +462,31 @@ class AuctionServiceTest {
         @DisplayName("Cùng người giảm hạn mức Auto-Bid → hoàn tiền chênh lệch")
         void createAutoBid_SameUser_DecreasesLimit() {
             // Arrange
-            AutoBid existingAutoBid = new AutoBid(ITEM_ID, bidder1, 1500.0, 1050.0);
+            testItemStatus.setCurrentPrice(1050.0);
+            testItemStatus.setHighestBidUser("bidder1");
+            AutoBid existingAutoBid = new AutoBid(
+                ITEM_ID,
+                bidder1,
+                1500.0,
+                1050.0
+            );
             AutoBidRequest request = new AutoBidRequest(ITEM_ID, 1200.0);
             setupBasicValidationMocks();
 
             when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(existingAutoBid));
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.of(existingAutoBid)
+            );
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
 
             // Act
-            BaseResponse response = auctionService.createAutoBid(request, "bidder1");
+            BaseResponse response = auctionService.createAutoBid(
+                request,
+                "bidder1"
+            );
 
             // Assert
             assertTrue(response.getStatus());
@@ -394,17 +498,31 @@ class AuctionServiceTest {
         @DisplayName("Người mới thắng Auto-Bid khi hạn mức cao hơn đối thủ")
         void createAutoBid_NewUserWins_HigherLimit() {
             // Arrange
-            AutoBid existingAutoBid = new AutoBid(ITEM_ID, bidder1, 1300.0, 1050.0);
+            testItemStatus.setCurrentPrice(1050.0);
+            testItemStatus.setHighestBidUser("bidder1");
+            AutoBid existingAutoBid = new AutoBid(
+                ITEM_ID,
+                bidder1,
+                1300.0,
+                1050.0
+            );
             AutoBidRequest request = new AutoBidRequest(ITEM_ID, 1500.0);
             setupBasicValidationMocks();
 
             when(userService.getUserByUsername("bidder2")).thenReturn(bidder2);
-            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(existingAutoBid));
-            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+            when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(
+                Optional.of(existingAutoBid)
+            );
+            when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(
+                testItemStatus
+            );
             when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
 
             // Act
-            BaseResponse response = auctionService.createAutoBid(request, "bidder2");
+            BaseResponse response = auctionService.createAutoBid(
+                request,
+                "bidder2"
+            );
 
             // Assert
             assertTrue(response.getStatus());
@@ -428,11 +546,13 @@ class AuctionServiceTest {
             Page<Bid> bidPage = new PageImpl<>(bidList);
 
             when(userService.getUserRef("bidder1")).thenReturn(bidder1);
-            when(bidService.getAllUserBid(eq(bidder1), any(PageRequest.class))).thenReturn(bidPage);
+            when(
+                bidService.getAllUserBid(eq(bidder1), any(PageRequest.class))
+            ).thenReturn(bidPage);
 
             // Act
             BaseObjectResponse<Page<Bid>> response =
-                    auctionService.getMyCurrentBids("bidder1", 0, 10);
+                auctionService.getMyCurrentBids("bidder1", 0, 10);
 
             // Assert
             assertTrue(response.getStatus());
@@ -448,7 +568,7 @@ class AuctionServiceTest {
 
             // Act
             BaseObjectResponse<List<BidAndItem>> response =
-                    auctionService.getMyWinnings("bidder1");
+                auctionService.getMyWinnings("bidder1");
 
             // Assert
             assertTrue(response.getStatus());
@@ -460,11 +580,13 @@ class AuctionServiceTest {
         @DisplayName("Danh sách thắng cuộc rỗng khi chưa thắng gì")
         void getMyWinnings_Empty() {
             // Arrange
-            when(bidService.getUserWins("bidder1")).thenReturn(new ArrayList<>());
+            when(bidService.getUserWins("bidder1")).thenReturn(
+                new ArrayList<>()
+            );
 
             // Act
             BaseObjectResponse<List<BidAndItem>> response =
-                    auctionService.getMyWinnings("bidder1");
+                auctionService.getMyWinnings("bidder1");
 
             // Assert
             assertTrue(response.getStatus());
