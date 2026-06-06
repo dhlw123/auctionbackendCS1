@@ -18,7 +18,7 @@ class TestRoleEscalation:
         for method, path, body in admin_endpoints:
             resp = fresh_user.client.post(path, token=fresh_user.access_token,
                                           json_body=body, raw=True)
-            assert resp.status_code == 403, f"{method} {path} should be 403, got {resp.status_code}"
+            assert resp.status_code == 403, f"{method} {path} got {resp.status_code}, expected 403"
 
     def test_user_cannot_cancel_others_item(self, fresh_user: UserSession,
                                              second_user: UserSession):

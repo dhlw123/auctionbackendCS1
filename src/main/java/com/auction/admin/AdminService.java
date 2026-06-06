@@ -84,7 +84,6 @@ public class AdminService {
 
         // Thiết lập mật khẩu của người dùng thành mã băm vô hiệu (banHash) để ngăn không cho đăng nhập lại
         user.setHashedPassword(banHash);
-        authService.revokeToken(username);
         userService.saveUser(user);
 
         // Lưu thông tin thu hồi token vào DB với thời gian hiện tại

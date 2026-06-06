@@ -45,9 +45,13 @@ class AuctionClient:
         if token:
             headers["Authorization"] = f"Bearer {token}"
         kwargs.setdefault("timeout", REQUEST_TIMEOUT)
-        resp = self.session.request(
-            method=method, url=url, json=json_body, headers=headers, **kwargs
-        )
+        kwargs["stream"] = True
+        try:
+            resp = self.session.request(
+                method=method, url=url, json=json_body, headers=headers, **kwargs
+            )
+        except requests.exceptions.ChunkedEncodingError:
+            raise ApiError(0, "Connection reset by server (chunked encoding error)", {})
         if not resp.ok and not raw_response:
             raise ApiError.from_response(resp)
         return resp
