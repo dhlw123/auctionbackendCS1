@@ -32,7 +32,7 @@ public class User {
     private Double balance;
 
     // Constructor mặc định bắt buộc đối với JPA Entity
-    User() {
+    public User() {
     }
 
     // Constructor đầy đủ tham số

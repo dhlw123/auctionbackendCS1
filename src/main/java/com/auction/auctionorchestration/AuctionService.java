@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuctionService {
 
-    private final AdminController adminController;
     private final ItemService itemService;
     private final UserService userService;
     private final ItemStatusService itemStatusService;
@@ -47,14 +46,13 @@ public class AuctionService {
             UserService userService,
             ItemStatusService itemStatusService,
             BidService bidService,
-            ItemPricesSink itemPricesSink, AdminController adminController
+            ItemPricesSink itemPricesSink
     ) {
         this.itemService = itemService;
         this.userService = userService;
         this.itemStatusService = itemStatusService;
         this.bidService = bidService;
         this.itemPricesSink = itemPricesSink;
-        this.adminController = adminController;
     }
 
     @Transactional

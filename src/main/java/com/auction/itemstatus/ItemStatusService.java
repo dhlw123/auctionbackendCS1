@@ -28,7 +28,6 @@ public class ItemStatusService {
      */
     @Transactional
     public ItemStatus saveStatus(ItemStatus itemStatus) {
-        System.out.println("Status Created");
         itemStatusRepository.save(itemStatus);
         return itemStatus;
     }

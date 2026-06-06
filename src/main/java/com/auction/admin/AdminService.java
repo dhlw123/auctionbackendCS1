@@ -11,6 +11,8 @@ import com.auction.items.ItemService;
 import com.auction.users.User;
 import com.auction.users.UserService;
 
+import jakarta.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,7 @@ public class AdminService {
      * @param itemId Mã ID của sản phẩm đấu giá cần hủy
      * @return Phản hồi thông báo kết quả hủy thành công
      */
+    @Transactional
     public BaseResponse cancelAuction(Long itemId) {
         // Lấy thông tin tên người bán từ sản phẩm để thực hiện luồng hủy cược/hoàn tiền
         String sellername = itemService.getItem(itemId).getUser().getUsername();
@@ -68,6 +71,7 @@ public class AdminService {
      * @param username Tên đăng nhập của người dùng cần khóa
      * @return Phản hồi thông báo khóa tài khoản thành công
      */
+    @Transactional
     public BaseResponse banUser(String username) {
         // Ngăn chặn hành vi khóa tài khoản admin
         if (username.equals("admin")) {
@@ -98,6 +102,7 @@ public class AdminService {
      * @param request Yêu cầu chứa username cần mở khóa và mật khẩu mới
      * @return Phản hồi thông báo mở khóa tài khoản thành công
      */
+    @Transactional
     public BaseResponse unbanUser(UnbanRequest request) {
         User user = userService.getUserByUsername(request.username());
 
