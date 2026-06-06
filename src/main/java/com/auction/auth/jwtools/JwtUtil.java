@@ -6,6 +6,8 @@
     import java.nio.charset.StandardCharsets;
     import java.util.Date;
     import javax.crypto.SecretKey;
+    import org.slf4j.Logger;
+    import org.slf4j.LoggerFactory;
     import org.springframework.beans.factory.annotation.Value;
     import org.springframework.stereotype.Component;
 
@@ -17,6 +19,8 @@
      */
     @Component
     public class JwtUtil {
+        private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
+
         // Chuỗi mã hóa bí mật JWT (cấu hình trong application.properties)
         @Value("${jwt.secret}")
         private String jwtSecret;
@@ -103,7 +107,7 @@
                 Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
                 return true;
             } catch (Exception e) {
-                System.err.printf("JWT validation error: %s", e.getMessage());
+                log.warn("JWT validation error: {}", e.getMessage());
                 throw new JwtExpiredException();
             }
         }

@@ -6,6 +6,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Thực thể User đại diện cho thông tin tài khoản người dùng trong cơ sở dữ liệu.
@@ -13,6 +15,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "users")
 public class User {
+    private static final Logger log = LoggerFactory.getLogger(User.class);
 
     // Tên đăng nhập của người dùng, đóng vai trò là khóa chính (Primary Key)
     @Id
@@ -94,7 +97,7 @@ public class User {
      */
     public void addBalance(Double value) {
         if (value < 0) {
-            System.err.println("Must not add negative value");
+            log.warn("Must not add negative value");
             return;
         }
         this.balance += value;
@@ -107,7 +110,7 @@ public class User {
      */
     public void deductBalance(Double value) {
         if (value < 0) {
-            System.err.println("Must not deduct negative value");
+            log.warn("Must not deduct negative value");
             return;
         }
         this.balance -= value;
