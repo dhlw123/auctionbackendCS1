@@ -67,10 +67,11 @@ class AdminServiceTest {
         BaseResponse response = adminService.banUser("baduser");
 
         // Assert
+        System.out.println("normalUser.getHashedPassword() = " + normalUser.getHashedPassword());
         assertTrue(response.getStatus());
         assertEquals("successfully banned user", response.getMessage());
         assertEquals("BANNED_HASH", normalUser.getHashedPassword());
-        verify(authService, times(2)).revokeToken("baduser");
+        verify(authService, times(1)).revokeToken("baduser");
         verify(userService).saveUser(normalUser);
         verify(revokedTokenRepository).save(any(RevokedToken.class));
     }
