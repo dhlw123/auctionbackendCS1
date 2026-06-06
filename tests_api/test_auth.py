@@ -59,11 +59,17 @@ class TestAuthLogin:
         with pytest.raises(ApiError) as exc:
             client.login("", DEFAULT_USER_PASSWORD)
         assert exc.value.status_code == 400
+        assert "username" in str(exc.value.body).lower(), (
+            f"Expected username validation error, got: {exc.value.body}"
+        )
 
     def test_login_empty_password(self, client):
         with pytest.raises(ApiError) as exc:
             client.login("someone", "")
         assert exc.value.status_code == 400
+        assert "password" in str(exc.value.body).lower(), (
+            f"Expected password validation error, got: {exc.value.body}"
+        )
 
 
 class TestAuthRefresh:
@@ -96,9 +102,10 @@ class TestAuthLogout:
             raw=True,
         )
         assert refresh_resp.status_code in (
-            200, 400, 498,
+            400, 498,
         ), (
             f"Refresh after logout returned {refresh_resp.status_code}. "
             f"Note: Spring Security's LogoutFilter may intercept /logout "
-            f"before AuthController, keeping the refresh token valid."
+            f"before AuthController, keeping the refresh token valid. "
+            f"Update if /logout behavior is fixed."
         )

@@ -35,8 +35,9 @@ tests_api/
 │
 ├── test_smoke.py           #  3 tests — server connectivity
 ├── test_auth.py            # 14 tests — register, login, refresh, logout
-├── test_admin.py           # 37 tests — ★ ban, unban, cancelAuction boundary
+├── test_admin.py           # 39 tests — ★ ban, unban, cancelAuction boundary
 ├── test_items.py           #  8 tests — publish, get, self-cancel
+├── test_auction.py         # 38 tests — ★ bid, buy-now, auto-bid, me/bids, me/wins
 └── test_security.py        #  5 tests — role escalation, auth bypass
 ```
 
@@ -62,7 +63,7 @@ conftest.py
 
 ---
 
-## Test Catalog (67 tests)
+## Test Catalog (105 tests)
 
 ### 1. Smoke Tests — `test_smoke.py`
 
@@ -224,14 +225,84 @@ Verify the server is running and public endpoints respond.
 | 62 | `test_cancel_own_item` | Owner cancels own item | 200 |
 | 63 | `test_cancel_already_canceled_own_item` | Cancel twice | 400 |
 
-### 5. Security Tests — `test_security.py`
+### 5. Auction Tests — `test_auction.py`
+
+#### 5a. `POST /bid` — Authentication
+
+| # | Test | Input | Expected |
+|---|------|-------|----------|
+| 64 | `test_bid_without_auth` | No token | 401/403 |
+
+#### 5b. `POST /bid` — Validation
+
+| # | Test | Input | Expected |
+|---|------|-------|----------|
+| 65 | `test_bid_empty_body` | No body sent | 400/403 |
+| 66 | `test_bid_non_existent_item` | `itemId=99999` | 400/404 |
+| 67 | `test_bid_negative_amount` | `bidAmount=-50` | 400 |
+| 68 | `test_bid_zero_amount` | `bidAmount=0` | 400 |
+| 69 | `test_bid_missing_item_id` | Only `bidAmount` | 400 |
+| 70 | `test_bid_missing_bid_amount` | Only `itemId` | 400 |
+
+#### 5c. `POST /bid` — Boundary & Logic
+
+| # | Test | Input | Expected |
+|---|------|-------|----------|
+| 71 | `test_bid_self_bid_rejected` | Seller bids own item | 400 `"own item"` |
+| 72 | `test_bid_below_starting_price` | `bidAmount < startingPrice` | 400 `"starting price"` |
+| 73 | `test_bid_below_increment` | `bidAmount < currentPrice + increment` | 400 `"current highest"` |
+| 74 | `test_bid_insufficient_balance` | Balance < bidAmount | 400 `"enough money"` |
+| 75 | `test_bid_on_canceled_item` | Bid on CANCELED item | 400 |
+| 76 | `test_first_bid_succeeds` | Valid first bid | 200 |
+| 77 | `test_same_user_increases_bid` | Same user bids higher | 200 |
+| 78 | `test_outbid_refunds_previous_bidder` | Third user outbids second_user | 200, previous bidder refunded |
+| 79 | `test_bid_near_end_triggers_extension` | Bid within extraTime of end | 200, `endTime` extended |
+| 80 | `test_bid_exact_increment_boundary` | Bid = currentPrice + increment | 200 |
+
+#### 5d. `POST /buy-now/{itemId}`
+
+| # | Test | Input | Expected |
+|---|------|-------|----------|
+| 81 | `test_buy_now_without_auth` | No token | 401/403 |
+| 82 | `test_buy_now_self_item_rejected` | Seller buys own item | 400 |
+| 83 | `test_buy_now_non_existent_item` | `itemId=99999` | 400 |
+| 84 | `test_buy_now_insufficient_balance` | Balance < buyItNowPrice | 400 |
+| 85 | `test_buy_now_success_ends_auction` | Valid buy-now | 200, `endTime ≤ now` |
+| 86 | `test_buy_now_on_ended_item` | Buy-now twice | 400 |
+
+#### 5e. `POST /auto-bid`
+
+| # | Test | Input | Expected |
+|---|------|-------|----------|
+| 87 | `test_auto_bid_without_auth` | No token | 401/403 |
+| 88 | `test_auto_bid_empty_body` | No body | 400/403 |
+| 89 | `test_auto_bid_missing_item_id` | Only `maxBidLimit` | 400 |
+| 90 | `test_auto_bid_missing_limit` | Only `itemId` | 400 |
+| 91 | `test_auto_bid_negative_limit` | `maxBidLimit=-100` | 400 |
+| 92 | `test_auto_bid_self_item_rejected` | Seller auto-bids own item | 400 |
+| 93 | `test_auto_bid_insufficient_balance` | Balance < maxBidLimit | 400 |
+| 94 | `test_auto_bid_first_no_bids_succeeds` | No existing bids (price=0) | 200 |
+| 95 | `test_auto_bid_competing_higher_limit_wins` | Third user with higher limit beats existing auto-bid | 200 |
+| 96 | `test_auto_bid_same_user_increases_limit` | Same user raises limit | 200 |
+| 97 | `test_auto_bid_same_user_decreases_limit` | Same user lowers limit | 200 |
+
+#### 5f. `GET /me/bids` & `GET /me/wins`
+
+| # | Test | Input | Expected |
+|---|------|-------|----------|
+| 98 | `test_get_my_bids_without_auth` | No token | 401/403 |
+| 99 | `test_get_my_bids_with_auth` | User with bid history | 200, paginated |
+| 100 | `test_get_my_wins_without_auth` | No token | 401/403 |
+| 101 | `test_get_my_wins_empty` | User with no wins | 200, empty list |
+
+### 6. Security Tests — `test_security.py`
 
 | # | Test | What It Checks |
 |---|------|---------------|
-| 64 | `test_regular_user_cannot_access_admin_endpoints` | User JWT on `/admin/ban`, `/admin/unban`, `/admin/cancel/1` → all 403 |
-| 65 | `test_user_cannot_cancel_others_item` | User A tries to cancel User B's item → 400 `"not the owner"` |
-| 66 | `test_admin_can_access_admin_endpoints` | Admin JWT on `/admin/ban` → proceeds (400 on nonexistent user) |
-| 67 | `test_admin_can_access_user_endpoints` | Admin JWT on `/users/me/balance` → 200 or 400 |
+| 102 | `test_regular_user_cannot_access_admin_endpoints` | User JWT on `/admin/ban`, `/admin/unban`, `/admin/cancel/1` → all 403 |
+| 103 | `test_user_cannot_cancel_others_item` | User A tries to cancel User B's item → 400 `"not the owner"` |
+| 104 | `test_admin_can_access_admin_endpoints` | Admin JWT on `/admin/ban` → proceeds (400 on nonexistent user) |
+| 105 | `test_admin_can_access_user_endpoints` | Admin JWT on `/users/me/balance` → 200 or 400 |
 
 ---
 

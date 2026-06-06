@@ -169,9 +169,43 @@ class UserSession(AuthSession):
         })
         return BaseObjectResponse.from_response(r)
 
+    def bid_raw(self, item_id: int | None = None, bid_amount: float | None = None, **extra) -> requests.Response:
+        body = dict(extra)
+        if item_id is not None:
+            body["itemId"] = item_id
+        if bid_amount is not None:
+            body["bidAmount"] = bid_amount
+        return self.client.post("/bid", token=self.access_token, json_body=body or None, raw=True)
+
     def buy_now(self, item_id: int) -> BaseResponse:
         r = self.client.post(f"/buy-now/{item_id}", token=self.access_token)
         return BaseResponse.from_response(r)
+
+    def buy_now_raw(self, item_id: int) -> requests.Response:
+        return self.client.post(f"/buy-now/{item_id}", token=self.access_token, raw=True)
+
+    def auto_bid(self, item_id: int, max_bid_limit: float) -> BaseResponse:
+        r = self.client.post("/auto-bid", token=self.access_token, json_body={
+            "itemId": item_id,
+            "maxBidLimit": max_bid_limit,
+        })
+        return BaseResponse.from_response(r)
+
+    def auto_bid_raw(self, item_id: int | None = None, max_bid_limit: float | None = None, **extra) -> requests.Response:
+        body = dict(extra)
+        if item_id is not None:
+            body["itemId"] = item_id
+        if max_bid_limit is not None:
+            body["maxBidLimit"] = max_bid_limit
+        return self.client.post("/auto-bid", token=self.access_token, json_body=body or None, raw=True)
+
+    def get_my_bids(self, page: int = 0, size: int = 10) -> BaseObjectResponse:
+        r = self.client.get(f"/me/bids?page={page}&size={size}", token=self.access_token)
+        return BaseObjectResponse.from_response(r)
+
+    def get_my_wins(self) -> BaseObjectResponse:
+        r = self.client.get("/me/wins", token=self.access_token)
+        return BaseObjectResponse.from_response(r)
 
 
 class AdminSession(AuthSession):

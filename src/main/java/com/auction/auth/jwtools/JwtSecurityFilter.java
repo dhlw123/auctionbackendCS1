@@ -78,6 +78,8 @@
         ) throws ServletException, IOException {
             String encodedToken = parseJwt(request);
 
+
+            // If no header then let Spring Security Handle.
             if (encodedToken == null) {
                 filterChain.doFilter(request, response);
                 return;

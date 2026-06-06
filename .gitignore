@@ -39,3 +39,9 @@ out/
 
 eclipse-formatter.xml
 auctiondb.db
+
+### Python ###
+__pycache__/
+.pytest_cache/
+.venv_api_tests/
+*.pyc

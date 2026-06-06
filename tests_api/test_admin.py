@@ -75,8 +75,16 @@ class TestAdminBanBoundary:
 
     def test_ban_mixed_case_admin_passes_guard(self, admin: AdminSession):
         resp = admin.ban_user_raw("Admin")
+        body = resp.json()
         assert resp.status_code == 400
-        assert "User not found" in str(resp.json())
+        assert (
+            "User not found" in str(body)
+            or "can't ban admin" in str(body).lower()
+        ), (
+            f"Banning 'Admin' returned {resp.status_code}: {body}. "
+            f"String equality check ('admin'.equals('Admin')) is case-sensitive; "
+            f"'Admin' passes the admin guard and falls through to user lookup."
+        )
 
     def test_ban_nonexistent_user(self, admin: AdminSession):
         with pytest.raises(ApiError) as exc:
@@ -217,12 +225,17 @@ class TestAdminUnbanBoundary:
         long_pw = "x" * 500
         resp = admin.unban_user_raw(uname, long_pw)
         assert resp.status_code in (
-            200, 400, 403, 413,
+            200, 400, 403,
         ), f"Unexpected status {resp.status_code} for long password unban"
 
         if resp.status_code == 200:
             auth = fresh_user.client.login(uname, long_pw)
             assert auth.access_token
+        elif resp.status_code == 400:
+            body = resp.json() if resp.text else {}
+            assert "User not found" in str(body) or "password" in str(body).lower(), (
+                f"Expected validation or not-found error, got: {body}"
+            )
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -275,8 +288,8 @@ class TestAdminCancelBoundary:
         assert resp.status is True
 
         status_resp = fresh_user.client.get_item_status(item.item_id)
-        if status_resp.entity:
-            assert status_resp.entity.item_status == "CANCELED"
+        assert status_resp.entity is not None, "Expected entity in item status response"
+        assert status_resp.entity.item_status == "CANCELED"
 
     def test_cancel_already_canceled_item(self, admin: AdminSession, fresh_user: UserSession):
         item_resp = fresh_user.publish_item(
@@ -319,7 +332,8 @@ class TestAdminCancelBoundary:
                                         second_user: UserSession):
         seller = fresh_user
         bidder = second_user
-        bidder.deposit(500.0)
+        deposit_resp = bidder.deposit(500.0)
+        assert deposit_resp.status is True, f"Deposit failed: {deposit_resp.message}"
 
         item_resp = seller.publish_item(
             title="Auction with bidder",

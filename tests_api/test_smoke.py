@@ -9,6 +9,9 @@ class TestServerConnectivity:
     def test_server_responds(self):
         try:
             r = requests.get(API_BASE_URL + "/items/all", timeout=5)
+            assert r.status_code in (200, 404), (
+                f"Expected 200 or 404, got {r.status_code}"
+            )
         except requests.ConnectionError:
             pytest.skip("Server not running")
 
