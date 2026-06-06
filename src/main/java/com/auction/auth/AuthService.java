@@ -77,6 +77,7 @@ public class AuthService {
      * @param request Yêu cầu đăng ký chứa username, displayName, password
      * @return BaseResponse phản hồi trạng thái
      */
+    @Transactional
     public BaseResponse userRegister(RegisterRequest request) {
         // Kiểm tra tên tài khoản đã được đăng ký trước đó chưa
         if (userService.existsUsername(request.username())) {

@@ -11,6 +11,8 @@ import static org.mockito.Mockito.when;
 
 import com.auction.auctionorchestration.dto.AutoBidRequest;
 import com.auction.auctionorchestration.dto.BidPostRequest;
+import com.auction.auctionorchestration.helper.AutoBidResolver;
+import com.auction.auctionorchestration.helper.BidValidator;
 import com.auction.bids.AutoBid;
 import com.auction.bids.Bid;
 import com.auction.bids.BidService;
@@ -75,7 +77,11 @@ class AuctionServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Inject @Value field
+        BidValidator bidValidator = new BidValidator(itemStatusService);
+        AutoBidResolver autoBidResolver = new AutoBidResolver(bidService, userService);
+
+        ReflectionTestUtils.setField(auctionService, "bidValidator", bidValidator);
+        ReflectionTestUtils.setField(auctionService, "autoBidResolver", autoBidResolver);
         ReflectionTestUtils.setField(auctionService, "extraTime", 300000L); // 5 phút
 
         seller = new User("seller", "Seller Name", "hashedpw", 1000.0);

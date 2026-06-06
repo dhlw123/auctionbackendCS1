@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -53,18 +52,19 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     public Page<Bid> findItemBidHistory(Pageable pageable, @Param("itemId") Long itemId);
 
     /**
-     * Truy vấn gốc (Native Query) tìm các lượt đấu giá chiến thắng của người dùng.
+     * Truy vấn JPQL tìm các lượt đấu giá chiến thắng của người dùng, kèm eager-load Item qua JOIN FETCH
+     * để tránh N+1 query khi truy cập {@code bid.getItem()}.
      * Một người thắng cuộc khi:
-     * - Họ đặt giá cho sản phẩm (`bids.bidder_username = :username`)
-     * - Họ giữ giá cao nhất hiện tại ở bảng trạng thái (`item_statuses.username = :username`)
-     * - Thời gian đấu giá của sản phẩm đó đã trôi qua (`item_statuses.end_time < :now`)
+     * - Họ đặt giá cho sản phẩm ({@code b.user.username = :username})
+     * - Họ giữ giá cao nhất hiện tại ở bảng trạng thái ({@code s.highestBidUser = :username})
+     * - Thời gian đấu giá của sản phẩm đó đã trôi qua ({@code s.endTime < :now})
      *
      * @param username Tên đăng nhập người dùng cần kiểm tra
      * @param now      Thời điểm hiện tại dưới dạng Epoch Milliseconds để đối chiếu thời gian kết thúc
-     * @return Danh sách các lượt đặt giá giành chiến thắng
+     * @return Danh sách các lượt đặt giá giành chiến thắng (kèm Item đã được eager-load)
      */
-    @NativeQuery(value = "SELECT bids.* FROM bids INNER JOIN items ON bids.item_id = items.item_id INNER JOIN item_statuses ON items.item_id = item_statuses.item_id WHERE :username = bids.bidder_username AND item_statuses.username = :username AND item_statuses.end_time < :now")
-    public List<Bid> getWinsByUser(@Param("username") String username, @Param("now") Long now);
+    @Query("SELECT b FROM Bid b JOIN FETCH b.item JOIN ItemStatus s ON b.item = s.item WHERE b.user.username = :username AND s.highestBidUser = :username AND s.endTime < :now")
+    List<Bid> getWinsByUser(@Param("username") String username, @Param("now") Long now);
 
     /**
      * Xóa các lượt đặt giá dựa trên thông tin sản phẩm và người dùng.

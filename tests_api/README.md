@@ -63,7 +63,7 @@ conftest.py
 
 ---
 
-## Test Catalog (105 tests)
+## Test Catalog (106 tests)
 
 ### 1. Smoke Tests — `test_smoke.py`
 
@@ -293,16 +293,17 @@ Verify the server is running and public endpoints respond.
 | 98 | `test_get_my_bids_without_auth` | No token | 401/403 |
 | 99 | `test_get_my_bids_with_auth` | User with bid history | 200, paginated |
 | 100 | `test_get_my_wins_without_auth` | No token | 401/403 |
-| 101 | `test_get_my_wins_empty` | User with no wins | 200, empty list |
+| 101 | `test_get_my_wins_with_winning_bid` | Buy-now to win item, then fetch wins | 200, item title matches. Exercises `getWinsByUser` native query |
+| 102 | `test_get_my_wins_empty` | User with no wins | 200, empty list |
 
 ### 6. Security Tests — `test_security.py`
 
 | # | Test | What It Checks |
 |---|------|---------------|
-| 102 | `test_regular_user_cannot_access_admin_endpoints` | User JWT on `/admin/ban`, `/admin/unban`, `/admin/cancel/1` → all 403 |
-| 103 | `test_user_cannot_cancel_others_item` | User A tries to cancel User B's item → 400 `"not the owner"` |
-| 104 | `test_admin_can_access_admin_endpoints` | Admin JWT on `/admin/ban` → proceeds (400 on nonexistent user) |
-| 105 | `test_admin_can_access_user_endpoints` | Admin JWT on `/users/me/balance` → 200 or 400 |
+| 103 | `test_regular_user_cannot_access_admin_endpoints` | User JWT on `/admin/ban`, `/admin/unban`, `/admin/cancel/1` → all 403 |
+| 104 | `test_user_cannot_cancel_others_item` | User A tries to cancel User B's item → 400 `"not the owner"` |
+| 105 | `test_admin_can_access_admin_endpoints` | Admin JWT on `/admin/ban` → proceeds (400 on nonexistent user) |
+| 106 | `test_admin_can_access_user_endpoints` | Admin JWT on `/users/me/balance` → 200 or 400 |
 
 ---
 

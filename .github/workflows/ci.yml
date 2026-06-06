@@ -35,7 +35,7 @@ jobs:
 
     - name: Start server for API tests
       run: |
-        java -jar build/libs/*.jar &
+        java -jar build/libs/auction-0.0.1-SNAPSHOT.jar &
         echo $! > /tmp/server.pid
         # Wait for server to be ready
         for i in $(seq 1 60); do

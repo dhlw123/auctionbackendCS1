@@ -396,3 +396,30 @@ class TestBidQueries:
     def test_get_my_wins_empty(self, fresh_user: UserSession):
         resp = fresh_user.get_my_wins()
         assert resp.status is True
+
+    def test_get_my_wins_with_winning_bid(self, fresh_user: UserSession, second_user: UserSession):
+        title = f"WinTest_{int(time.time())}"
+        item_id = _publish(fresh_user, title=title, buy_now=100)
+
+        _deposit(second_user, 500)
+        buy_resp = second_user.buy_now(item_id)
+        assert buy_resp.status is True, f"Buy-now failed: {buy_resp.message}"
+
+        time.sleep(0.2)
+
+        resp = second_user.get_my_wins()
+        assert resp.status is True, f"get_my_wins failed: {resp.message}"
+        assert resp.entity is not None, "Expected non-empty winnings list"
+        assert isinstance(resp.entity, list), f"Expected list, got {type(resp.entity)}"
+        assert len(resp.entity) > 0, (
+            f"Expected at least 1 won item, got empty list. "
+            f"entity={resp.entity}"
+        )
+
+        won = resp.entity[0]
+        assert isinstance(won, dict), f"Expected dict, got {type(won)}"
+        item = won.get("item", {})
+        assert item.get("title") == title, (
+            f"Expected won item title '{title}', got '{item.get('title')}'. "
+            f"Full response: {resp.entity}"
+        )
