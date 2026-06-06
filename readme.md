@@ -4,6 +4,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.5-brightgreen.svg?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
 [![SQLite](https://img.shields.io/badge/SQLite-Database-blue.svg?style=flat-square&logo=sqlite)](https://www.sqlite.org/)
 [![Reactive Streams](https://img.shields.io/badge/Reactive-Reactor-purple.svg?style=flat-square&logo=reactive-x)](https://projectreactor.io/)
+[![Spring Boot CI](https://github.com/dhlw123/auctionbackendCS1/actions/workflows/ci.yml/badge.svg)](https://github.com/dhlw123/auctionbackendCS1/actions/workflows/ci.yml)
 
 Dự án này là hệ thống Backend cho sàn đấu giá trực tuyến thời gian thực (Real-time Auction Platform). Hệ thống cung cấp các API RESTful bảo mật và cơ chế phát dữ liệu thời gian thực (Server-Sent Events) giúp cập nhật biến động giá sản phẩm và số dư tài khoản người dùng ngay lập tức.
 
