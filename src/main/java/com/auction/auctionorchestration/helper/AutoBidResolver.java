@@ -105,7 +105,8 @@ public class AutoBidResolver {
         AutoBid currentAutoBid =
             new AutoBid(
                 request.itemId(), bidder, request.maxBidLimit(), itemStatus.getNextBidStep());
-        itemStatus.setNextBidStep(bidder.getUsername());
+        itemStatus.setCurrentPrice(prevAutoBid.getMaxBidLimit() + itemStatus.getBidIncrement());
+        itemStatus.setHighestBidUser(bidder.getUsername());
         bidService.saveAutoBid(currentAutoBid);
       } else {
         prevAutoBid.setCurrentBidValue(request.maxBidLimit());
