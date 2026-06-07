@@ -59,23 +59,18 @@ public class BidValidator {
         }
     }
 
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public boolean auctionEndedOrNot(Long itemId) {
         ItemStatus itemStatus = itemStatusService.getItemStatus(itemId);
 
         if (itemStatus.getItemStatus().equals("ENDED")
                 || itemStatus.getItemStatus().equals("CANCELED")) {
             return true;
-        }
-        else if (itemStatus.getEndTime() < Instant.now().toEpochMilli()) {
+        } else if (itemStatus.getEndTime() < Instant.now().toEpochMilli()) {
             itemStatus.setItemStatus("ENDED");
             itemStatusService.saveStatus(itemStatus);
-            User seller = itemService.getItem(itemId).getUser();
-            userService.addBalance(seller.getUsername(), itemStatus.getCurrentPrice());
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }

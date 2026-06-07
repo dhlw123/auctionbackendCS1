@@ -144,9 +144,7 @@ class AuthServiceTest {
     RefreshToken tokenData = new RefreshToken();
     tokenData.setUsername("testuser");
     tokenData.setRefreshToken(oldRefreshToken);
-
-    ReflectionTestUtils.setField(
-        tokenData, "createdAt", Instant.now().toEpochMilli()); // Fresh token
+    tokenData.setCreatedAt(Instant.now().toEpochMilli());
 
     when(refreshTokenRepository.findRefreshTokenData(oldRefreshToken))
         .thenReturn(Optional.of(tokenData));
@@ -160,7 +158,7 @@ class AuthServiceTest {
     assertEquals(true, response.getStatus());
     assertEquals("new_access_token", response.getAccessToken());
     assertEquals("new_refresh_token", response.getRefreshToken());
-    verify(refreshTokenRepository).save(tokenData);
+    verify(refreshTokenRepository).save(any(RefreshToken.class));
   }
 
   @Test

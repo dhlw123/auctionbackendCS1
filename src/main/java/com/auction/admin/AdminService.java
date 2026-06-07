@@ -109,5 +109,4 @@ public class AdminService {
 
     return new BaseResponse(true, "Succesfully unbanned user.");
   }
-  
 }
