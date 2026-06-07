@@ -26,6 +26,15 @@ from .test_auction import _deposit, _now_ms, _publish
 
 
 def _register_and_login(client: AuctionClient, prefix: str) -> UserSession:
+    """Register a new user with a UUID-based username, log in, and return a UserSession.
+
+    Args:
+        client: The shared AuctionClient instance.
+        prefix: Prefix for the username (e.g. "buy3", "auto4").
+
+    Returns:
+        A logged-in UserSession for the newly created user.
+    """
     uid = uuid.uuid4().hex[:12]
     uname = f"{prefix}_{uid}"
     client.register(uname, f"User {uid}", DEFAULT_USER_PASSWORD)
@@ -33,13 +42,31 @@ def _register_and_login(client: AuctionClient, prefix: str) -> UserSession:
     return UserSession(client, auth, uname)
 
 
-def _end_via_buy_now(item_id: int, buyer: UserSession, buy_price: float):
+def _end_via_buy_now(item_id: int, buyer: UserSession, buy_price: float) -> None:
+    """Deposit funds and buy-now to end the auction.
+
+    Args:
+        item_id: The item to buy.
+        buyer: The UserSession who will purchase the item.
+        buy_price: The buy-it-now price of the item.
+
+    Raises:
+        AssertionError: If the buy-now API call fails.
+    """
     _deposit(buyer, buy_price * 2 + 100)
     resp = buyer.buy_now(item_id)
     assert resp.status is True
 
 
-def _finalize(admin: AdminSession):
+def _finalize(admin: AdminSession) -> None:
+    """Trigger the admin endpoint that finalizes expired auctions and pays sellers.
+
+    Args:
+        admin: The admin session used to call the finalize endpoint.
+
+    Raises:
+        AssertionError: If the finalize API call fails.
+    """
     resp = admin.finalize_expired_auctions()
     assert resp.status is True
 

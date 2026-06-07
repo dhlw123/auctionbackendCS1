@@ -40,6 +40,28 @@ class AuctionClient:
         raw_response: bool = False,
         **kwargs,
     ) -> requests.Response:
+        """Issue an HTTP request to the API server.
+
+        stream=True prevents auto-consuming the response body.
+        This avoids ChunkedEncodingError when the server closes
+        the connection after a Spring Security error page dispatch
+        leaves the chunked transfer encoding incomplete.
+
+        Args:
+            method: HTTP method ("GET", "POST", etc.).
+            path: URL path relative to base_url (e.g. "/admin/ban").
+            token: JWT Bearer token, if any.
+            json_body: JSON-serializable request body.
+            raw_response: If True, return the Response even for 4xx/5xx.
+                          If False, raise ApiError on non-2xx.
+
+        Returns:
+            The requests.Response object.
+
+        Raises:
+            ApiError: If raw_response is False and the status is not 2xx,
+                      or if a ChunkedEncodingError occurs.
+        """
         url = f"{self.base_url}{path}"
         headers = kwargs.pop("headers", {})
         if token:

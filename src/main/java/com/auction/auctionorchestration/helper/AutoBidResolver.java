@@ -114,11 +114,19 @@ public class AutoBidResolver {
       }
     } else {
       userService.addBalance(itemStatus.getHighestBidUser(), itemStatus.getCurrentPrice());
-
-      AutoBid currentAutoBid =
-          new AutoBid(request.itemId(), bidder, request.maxBidLimit(), itemStatus.getNextBidStep());
+      AutoBid currentAutoBid;
+      if (itemStatus.getHighestBidUser().equals(bidder.getUsername())) {
+        currentAutoBid =
+            new AutoBid(
+                request.itemId(), bidder, request.maxBidLimit(), itemStatus.getCurrentPrice());
+      } else {
+        currentAutoBid =
+            new AutoBid(
+                request.itemId(), bidder, request.maxBidLimit(), itemStatus.getNextBidStep());
+      }
       bidService.saveAutoBid(currentAutoBid);
-      itemStatus.setNextBidStep(bidder.getUsername());
+      itemStatus.setCurrentPrice(currentAutoBid.getCurrentBidValue());
+      itemStatus.setHighestBidUser(bidder.getUsername());
       userService.deductBalance(bidder.getUsername(), request.maxBidLimit());
     }
   }
