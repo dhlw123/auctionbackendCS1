@@ -1,9 +1,7 @@
 package com.auction.items;
 
-import com.auction.auctionorchestration.helper.BidValidator;
 import com.auction.common.BaseException;
 import com.auction.common.BaseObjectResponse;
-import com.auction.common.BaseResponse;
 import com.auction.items.dto.PublishItemRequest;
 import com.auction.itemstatus.ItemStatus;
 import com.auction.itemstatus.ItemStatusService;
@@ -12,7 +10,6 @@ import com.auction.users.UserService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,31 +17,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service quản lý logic nghiệp vụ liên quan đến sản phẩm đấu giá (Items), bao gồm đăng bán sản
- * phẩm, hủy đấu giá, và truy vấn thông tin sản phẩm.
- */
 @Service
 public class ItemService {
   private final ItemRepository itemRepository;
   private final UserService userService;
   private final ItemStatusService itemStatusService;
 
-  // Thời gian bù giờ tối đa cho phiên đấu giá (cấu hình từ application.properties)
   @Value("${max_extra_time}")
   private Long maxExtraTime;
 
-  private final BidValidator bidValidator;
-
   public ItemService(
-      ItemRepository itemRepository,
-      UserService userService,
-      ItemStatusService itemStatusService,
-      @Lazy BidValidator bidValidator) {
+      ItemRepository itemRepository, UserService userService, ItemStatusService itemStatusService) {
     this.itemRepository = itemRepository;
     this.userService = userService;
     this.itemStatusService = itemStatusService;
-    this.bidValidator = bidValidator;
   }
 
   /**
@@ -79,45 +65,6 @@ public class ItemService {
             request.endTime() + maxExtraTime));
 
     return new BaseObjectResponse<>(true, "Created new item.", item);
-  }
-
-  /**
-   * Thực hiện nghiệp vụ hủy bỏ một phiên đấu giá sản phẩm đang hoạt động. Hoàn lại số tiền cược cho
-   * người đặt giá cao nhất hiện tại (nếu có).
-   *
-   * @param itemId Mã ID sản phẩm cần hủy
-   * @param username Tên đăng nhập của người dùng yêu cầu hủy
-   * @return BaseResponse phản hồi trạng thái kết quả
-   */
-  @Transactional
-  public BaseResponse cancelItem(Long itemId, String username) {
-    Item item = getItem(itemId);
-
-    // Xác thực quyền sở hữu: Chỉ người đăng bán sản phẩm mới được phép hủy
-    if (!item.getUser().getUsername().equals(username)) {
-      throw new BaseException("You are not the owner of this item");
-    }
-
-    ItemStatus status = itemStatusService.getItemStatus(itemId);
-    // Chỉ cho phép hủy các sản phẩm có trạng thái đấu giá là ACTIVE và chưa thực sự kết thúc
-    if (!"ACTIVE".equals(status.getItemStatus()) || bidValidator.auctionEndedOrNot(itemId)) {
-      throw new BaseException("Only ACTIVE items can be canceled.");
-    }
-
-    // Cập nhật trạng thái thành CANCELED và kết thúc thời gian đấu giá ngay lập tức
-    status.setItemStatus("CANCELED");
-    status.setEndTime(Instant.now().toEpochMilli());
-    itemStatusService.saveStatus(status);
-
-    // Nghiệp vụ hoàn tiền cược cho người trả giá cao nhất hiện tại (nếu họ không phải người bán
-    // và
-    // đã trả giá > 0)
-    String highestBidUser = status.getHighestBidUser();
-    if (!highestBidUser.equals(item.getUser().getUsername()) && status.getCurrentPrice() > 0) {
-      userService.addBalance(highestBidUser, status.getCurrentPrice());
-    }
-
-    return new BaseResponse(true, "Item successfully canceled.");
   }
 
   /** Lấy phản hồi thông tin sản phẩm dựa trên ID. */

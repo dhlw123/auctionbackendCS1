@@ -33,6 +33,7 @@ public class AutoBidResolver {
         userService.deductBalance(username, bidAmount);
         itemStatus.setHighestBidUser(username);
         itemStatus.setCurrentPrice(bidAmount);
+        bidService.deleteAutoBid(autoBid);
       } else {
         double autoCounter =
             Math.min(bidAmount + itemStatus.getBidIncrement(), autoBid.getMaxBidLimit());

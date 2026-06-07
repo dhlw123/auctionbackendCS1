@@ -7,6 +7,7 @@ import com.auction.auctionorchestration.helper.BidValidator;
 import com.auction.bids.AutoBid;
 import com.auction.bids.Bid;
 import com.auction.bids.BidService;
+import com.auction.common.BaseException;
 import com.auction.common.BaseObjectResponse;
 import com.auction.common.BaseResponse;
 import com.auction.common.jointdata.BidAndItem;
@@ -20,6 +21,7 @@ import com.auction.users.UserService;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -162,5 +164,63 @@ public class AuctionService {
     if (remainingTime < extraTime && itemStatus.getEndTime() < itemStatus.getMaxEndTime()) {
       itemStatus.setEndTime(Instant.now().toEpochMilli() + extraTime);
     }
+  }
+
+  /**
+   * Thực hiện nghiệp vụ hủy bỏ một phiên đấu giá sản phẩm đang hoạt động. Hoàn lại số tiền cược cho
+   * người đặt giá cao nhất hiện tại (nếu có).
+   *
+   * @param itemId Mã ID sản phẩm cần hủy
+   * @param username Tên đăng nhập của người dùng yêu cầu hủy
+   * @return BaseResponse phản hồi trạng thái kết quả
+   */
+  @Transactional
+  public BaseResponse cancelItem(Long itemId, String username) {
+    Item item = itemService.getItem(itemId);
+
+    // Xác thực quyền sở hữu: Chỉ người đăng bán sản phẩm mới được phép hủy
+    if (!item.getUser().getUsername().equals(username)) {
+      throw new BaseException("You are not the owner of this item");
+    }
+
+    ItemStatus status = itemStatusService.getItemStatus(itemId);
+    // Chỉ cho phép hủy các sản phẩm có trạng thái đấu giá là ACTIVE và chưa thực sự kết thúc
+    if (!"ACTIVE".equals(status.getItemStatus()) || bidValidator.auctionEndedOrNot(itemId)) {
+      throw new BaseException("Only ACTIVE items can be canceled.");
+    }
+
+    // Cập nhật trạng thái thành CANCELED và kết thúc thời gian đấu giá ngay lập tức
+    status.setItemStatus("CANCELED");
+    status.setEndTime(Instant.now().toEpochMilli());
+    itemStatusService.saveStatus(status);
+
+    // Nghiệp vụ hoàn tiền cược cho người trả giá cao nhất hiện tại (nếu họ không phải người bán
+    // và
+    // đã trả giá > 0)
+    String highestBidUser = status.getHighestBidUser();
+    if (!highestBidUser.equals(item.getUser().getUsername()) && status.getCurrentPrice() > 0) {
+      userService.addBalance(highestBidUser, status.getCurrentPrice());
+    }
+
+    // Hoàn trả toàn bộ maxBidLimit cho người dùng đang có cấu hình tự động đấu giá (AutoBid).
+    Optional<AutoBid> autoBidOpt = bidService.getAutoBidByItemId(itemId);
+    if (autoBidOpt.isPresent()) {
+      AutoBid autoBid = autoBidOpt.get();
+      String autoBidderName = autoBid.getBidder().getUsername();
+
+      if (!autoBidderName.equals(item.getUser().getUsername())) {
+        if (autoBidderName.equals(highestBidUser)) {
+          double remainder = autoBid.getMaxBidLimit() - status.getCurrentPrice();
+          if (remainder > 0) {
+            userService.addBalance(autoBidderName, remainder);
+          }
+        } else {
+          userService.addBalance(autoBidderName, autoBid.getMaxBidLimit());
+        }
+        bidService.deleteAutoBid(autoBid);
+      }
+    }
+
+    return new BaseResponse(true, "Item successfully canceled.");
   }
 }

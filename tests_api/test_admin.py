@@ -354,3 +354,33 @@ class TestAdminCancelBoundary:
         assert after_balance.entity is not None
         assert before_balance.entity is not None
         assert after_balance.entity >= before_balance.entity
+
+    def test_cancel_with_auto_bid_refunds_full_max_limit(self, admin: AdminSession,
+                                                           fresh_user: UserSession,
+                                                           second_user: UserSession):
+        """Cancel after auto-bid refunds the full locked maxBidLimit, not just currentPrice.
+
+        Previously only currentPrice was refunded on cancel, causing auto-bidders to
+        lose (maxBidLimit - currentPrice). Now cancelItem queries the AutoBid table
+        and refunds the full locked amount.
+        """
+        item_resp = fresh_user.publish_item(
+            title="Auto-bid cancel", description="Cancel with auto-bidder",
+            end_time_ms=_now_ms() + 3_600_000, starting_price=100.0,
+            buy_it_now_price=1000.0, bid_increment=10.0,
+        )
+        item = item_resp.entity
+        max_limit = 500.0
+
+        deposit_resp = second_user.deposit(max_limit)
+        assert deposit_resp.status is True
+
+        bal_before = second_user.get_balance().entity
+        second_user.auto_bid(item.item_id, max_limit)
+        admin.cancel_auction(item.item_id)
+
+        bal_after = second_user.get_balance().entity
+        assert bal_after == bal_before, (
+            f"Should refund full maxBidLimit on cancel. "
+            f"Before: {bal_before}, After: {bal_after}"
+        )

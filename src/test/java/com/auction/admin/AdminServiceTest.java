@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.auction.admin.dto.UnbanRequest;
+import com.auction.auctionorchestration.AuctionService;
+import com.auction.auctionorchestration.helper.AuctionFinalizer;
 import com.auction.auth.AuthService;
 import com.auction.auth.RevokedToken;
 import com.auction.auth.RevokedTokenRepository;
@@ -40,6 +42,10 @@ class AdminServiceTest {
   @Mock private PasswordEncoder passwordEncoder;
 
   @Mock private RevokedTokenRepository revokedTokenRepository;
+
+  @Mock private AuctionFinalizer auctionFinalizer;
+
+  @Mock private AuctionService auctionService;
 
   @InjectMocks private AdminService adminService;
 
@@ -107,7 +113,7 @@ class AdminServiceTest {
     BaseResponse cancelResponse = new BaseResponse(true, "Item successfully canceled.");
 
     when(itemService.getItem(itemId)).thenReturn(item);
-    when(itemService.cancelItem(itemId, "seller")).thenReturn(cancelResponse);
+    when(auctionService.cancelItem(itemId, "seller")).thenReturn(cancelResponse);
 
     // Act
     BaseResponse response = adminService.cancelAuction(itemId);

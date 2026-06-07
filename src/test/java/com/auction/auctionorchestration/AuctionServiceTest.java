@@ -453,4 +453,88 @@ class AuctionServiceTest {
       assertEquals(0, response.getEntity().size());
     }
   }
+
+  // ========================================================================
+  // Nhóm test: cancelItem (Hủy phiên đấu giá)
+  // ========================================================================
+  @Nested
+  @DisplayName("cancelItem - Hủy phiên đấu giá")
+  class CancelItemTests {
+
+    @BeforeEach
+    void setUpCancelItem() {
+      testItemStatus.setCurrentPrice(50.0);
+      testItemStatus.setHighestBidUser("anotheruser");
+    }
+
+    @Test
+    @DisplayName("Hủy thành công — hoàn tiền cho người đặt giá cao nhất")
+    void cancelItem_Success_RefundsHighestBidder() {
+      when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
+      when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+
+      BaseResponse response = auctionService.cancelItem(ITEM_ID, "seller");
+
+      assertTrue(response.getStatus());
+      assertEquals("Item successfully canceled.", response.getMessage());
+      assertEquals("CANCELED", testItemStatus.getItemStatus());
+      verify(itemStatusService).saveStatus(testItemStatus);
+      verify(userService).addBalance("anotheruser", 50.0);
+    }
+
+    @Test
+    @DisplayName("Không tìm thấy sản phẩm — ném ngoại lệ")
+    void cancelItem_ItemNotFound_ThrowsException() {
+      when(itemService.getItem(ITEM_ID))
+          .thenThrow(new BaseException("There is no such Item with that ID"));
+
+      BaseException ex =
+          assertThrows(BaseException.class, () -> auctionService.cancelItem(ITEM_ID, "seller"));
+      assertEquals("There is no such Item with that ID", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Người dùng không phải chủ sở hữu — ném ngoại lệ")
+    void cancelItem_UserNotOwner_ThrowsException() {
+      when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
+
+      BaseException ex =
+          assertThrows(BaseException.class, () -> auctionService.cancelItem(ITEM_ID, "wronguser"));
+      assertEquals("You are not the owner of this item", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Sản phẩm không ở trạng thái ACTIVE — ném ngoại lệ")
+    void cancelItem_NotActive_ThrowsException() {
+      testItemStatus.setItemStatus("ENDED");
+      when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
+      when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+
+      BaseException ex =
+          assertThrows(BaseException.class, () -> auctionService.cancelItem(ITEM_ID, "seller"));
+      assertEquals("Only ACTIVE items can be canceled.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("Hủy với AutoBid — hoàn trả toàn bộ maxBidLimit")
+    void cancelItem_WithAutoBid_RefundsFullMaxLimit() {
+      User autoBidder = new User("autobidder", "Auto Bidder", "hashedpw", 500.0);
+      testItemStatus.setHighestBidUser("autobidder");
+      testItemStatus.setCurrentPrice(100.0);
+      AutoBid autoBid = new AutoBid(ITEM_ID, autoBidder, 500.0, 100.0);
+
+      when(itemService.getItem(ITEM_ID)).thenReturn(testItem);
+      when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
+      when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(autoBid));
+
+      auctionService.cancelItem(ITEM_ID, "seller");
+
+      // Existing code refunds currentPrice (100)
+      verify(userService).addBalance("autobidder", 100.0);
+      // New code refunds remainder = maxBidLimit - currentPrice (500 - 100 = 400)
+      verify(userService).addBalance("autobidder", 400.0);
+      // AutoBid should be deleted
+      verify(bidService).deleteAutoBid(autoBid);
+    }
+  }
 }

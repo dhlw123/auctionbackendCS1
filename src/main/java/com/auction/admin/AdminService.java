@@ -1,6 +1,7 @@
 package com.auction.admin;
 
 import com.auction.admin.dto.*;
+import com.auction.auctionorchestration.AuctionService;
 import com.auction.auctionorchestration.helper.AuctionFinalizer;
 import com.auction.auth.AuthService;
 import com.auction.auth.RevokedToken;
@@ -29,6 +30,7 @@ public class AdminService {
   private final PasswordEncoder passwordEncoder;
   private final RevokedTokenRepository revokedTokenRepository;
   private final AuctionFinalizer auctionFinalizer;
+  private final AuctionService auctionService;
 
   // Chuỗi mã băm dùng để thay thế mật khẩu của người dùng khi bị khóa tài khoản
   @Value("${ban_hash}")
@@ -40,13 +42,15 @@ public class AdminService {
       AuthService authService,
       PasswordEncoder passwordEncoder,
       RevokedTokenRepository revokedTokenRepository,
-      AuctionFinalizer auctionFinalizer) {
+      AuctionFinalizer auctionFinalizer,
+      AuctionService auctionService) {
     this.itemService = itemService;
     this.userService = userService;
     this.authService = authService;
     this.passwordEncoder = passwordEncoder;
     this.revokedTokenRepository = revokedTokenRepository;
     this.auctionFinalizer = auctionFinalizer;
+    this.auctionService = auctionService;
   }
 
   /**
@@ -59,7 +63,8 @@ public class AdminService {
   public BaseResponse cancelAuction(Long itemId) {
     // Lấy thông tin tên người bán từ sản phẩm để thực hiện luồng hủy cược/hoàn tiền
     String sellername = itemService.getItem(itemId).getUser().getUsername();
-    return itemService.cancelItem(itemId, sellername);
+
+    return auctionService.cancelItem(itemId, sellername);
   }
 
   /**
@@ -81,7 +86,8 @@ public class AdminService {
     // Thu hồi các token đăng nhập hiện có của người dùng
     authService.revokeToken(username);
 
-    // Thiết lập mật khẩu của người dùng thành mã băm vô hiệu (banHash) để ngăn không cho đăng nhập
+    // Thiết lập mật khẩu của người dùng thành mã băm vô hiệu (banHash) để ngăn không cho đăng
+    // nhập
     // lại
     user.setHashedPassword(banHash);
     userService.saveUser(user);

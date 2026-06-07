@@ -499,6 +499,51 @@ class TestAutoBidBoundary:
         item_status = fresh_user.client.get_item_status(item_id)
         assert item_status.entity.current_price == 189
 
+    def test_manual_bid_outbids_auto_bid_and_self_increase(
+        self, fresh_user: UserSession, second_user: UserSession,
+        third_user: UserSession,
+    ):
+        """Manual bid outbids auto-bid — auto-bidder gets full refund,
+        then self-increase refunds prior manual bid amount.
+
+        Steps:
+          1. third_user bids to set currentPrice=1000
+          2. third_user auto-bids 1200 to replace manual bid with auto-bid
+          3. second_user manually outbids auto-bid at 1300
+             → third_user refunded full maxBidLimit 1200
+          4. second_user self-increases to 1400
+             → second_user refunded prior 1300, pays 1400 (net -100)
+        """
+        item_id = _publish(fresh_user, start_price=100, inc=10)
+        _deposit(second_user, 5000)
+        _deposit(third_user, 5000)
+        bal_b_deposit = third_user.get_balance().entity
+
+        third_user.bid(item_id, 1000)
+
+        third_user.auto_bid(item_id, 1200)
+        # refunds prior bid 1000, locks 1200, currentPrice=1010
+
+        bal_a_initial = second_user.get_balance().entity
+        second_user.bid(item_id, 1300)
+        # 1300+10=1310 > 1200 → outbids auto-bid
+        # third_user refunded 1200, second_user pays 1300
+
+        bal_b_after = third_user.get_balance().entity
+        assert bal_b_after == bal_b_deposit, (
+            f"UserB should return to deposit balance after full cycle. "
+            f"Deposit: {bal_b_deposit}, After: {bal_b_after}"
+        )
+
+        second_user.bid(item_id, 1400)
+        # No auto-bid. else branch: deduct 1400, refund prior highestBidUser 1300
+        bal_a_after = second_user.get_balance().entity
+        expected_a = bal_a_initial - 1400.0
+        assert bal_a_after == expected_a, (
+            f"UserA total locked should be 1400. "
+            f"Expected {expected_a}, got {bal_a_after}"
+        )
+
 
 # ═══════════════════════════════════════════════════════════════════
 # GET /me/bids  &  GET /me/wins

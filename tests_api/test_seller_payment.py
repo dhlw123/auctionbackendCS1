@@ -395,3 +395,73 @@ class TestSellerPaymentEndToEnd:
             f"Expected {seller_initial} + 150 = {seller_initial + 150}, "
             f"got {seller_final}"
         )
+
+
+# ═══════════════════════════════════════════════════════════════════
+# 8. Auto-bid natural end — auto-bidder locked amount not refunded
+# ═══════════════════════════════════════════════════════════════════
+
+@pytest.mark.skip(reason="Needs 6+ min wait: auto-bid triggers applyAntiBidExtension"
+                         " which extends endTime to now + extraTime (360s)."
+                         " Set APPLICATION_EXTRA_TIME env to a small value to run.")
+class TestSellerPaymentAutoBidderAtEnd:
+
+    def test_auto_bidder_locked_amount_not_refunded_on_natural_end(
+        self, admin: AdminSession, fresh_user: UserSession,
+        second_user: UserSession,
+    ):
+        """Auto-bidder's locked maxBidLimit is NOT refunded on natural end.
+
+        Current price 100 (User A)
+        User A auto-bid 500 -> balance -500
+        End bid -> seller balance +100
+               User A balance not change (lost 400)
+
+        The AuctionFinalizer pays the seller currentPrice but has no
+        logic to refund the auto-bidder's unused locked amount.
+        """
+        extra_time = 360_000  # from application.properties
+        end_ms = _now_ms() + extra_time + 1000
+        item_id = _publish(fresh_user, start_price=100, inc=10,
+                           end_ms=end_ms)
+        _deposit(second_user, 1000)
+        after_deposit = second_user.get_balance().entity
+        seller_before = fresh_user.get_balance().entity
+
+        second_user.auto_bid(item_id, 500)
+        after_autobid = second_user.get_balance().entity
+        assert after_autobid == after_deposit - 500.0
+
+        wait_ms = end_ms - _now_ms() + 2000
+        time.sleep(wait_ms / 1000)
+        _finalize(admin)
+
+        seller_after = fresh_user.get_balance().entity
+        assert seller_after == seller_before + 100.0, (
+            f"Seller should receive currentPrice (100). "
+            f"Before: {seller_before}, After: {seller_after}"
+        )
+
+        user_after = second_user.get_balance().entity
+        assert user_after == after_autobid, (
+            f"User A balance unchanged from post-auto-bid "
+            f"(locked 500 never refunded). "
+            f"After auto-bid: {after_autobid}, After end: {user_after}"
+        )
+        assert user_after == after_deposit - 500.0, (
+            f"User A net loss: deposited {after_deposit}, "
+            f"locked 500, got back nothing. "
+            f"Expected {after_deposit - 500}, got {user_after}"
+        )
+
+        user_after = second_user.get_balance().entity
+        assert user_after == after_autobid, (
+            f"User A balance unchanged from post-auto-bid "
+            f"(locked 500 never refunded). "
+            f"After auto-bid: {after_autobid}, After end: {user_after}"
+        )
+        assert user_after == after_deposit - 500.0, (
+            f"User A net loss: deposited {after_deposit}, "
+            f"locked 500, got back nothing. "
+            f"Expected {after_deposit - 500}, got {user_after}"
+        )

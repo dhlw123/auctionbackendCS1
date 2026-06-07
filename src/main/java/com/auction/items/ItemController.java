@@ -1,5 +1,6 @@
 package com.auction.items;
 
+import com.auction.auctionorchestration.AuctionService;
 import com.auction.auth.jwtools.UserDetailsImpl;
 import com.auction.common.BaseObjectResponse;
 import com.auction.common.BaseResponse;
@@ -20,18 +21,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/**
- * Controller chịu trách nhiệm xử lý các API REST liên quan đến sản phẩm đấu giá (Items). Tất cả các
- * yêu cầu cần phải có mã xác thực Bearer Token (JWT).
- */
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/items")
 public class ItemController {
   private final ItemService itemService;
+  private final AuctionService auctionService;
 
-  public ItemController(ItemService itemService) {
+  public ItemController(ItemService itemService, AuctionService auctionService) {
     this.itemService = itemService;
+    this.auctionService = auctionService;
   }
 
   /**
@@ -61,7 +60,7 @@ public class ItemController {
   @PostMapping("/cancel/{itemId}")
   public ResponseEntity<BaseResponse> cancelItem(
       @PathVariable Long itemId, @AuthenticationPrincipal UserDetailsImpl userDetailsImpl) {
-    BaseResponse response = itemService.cancelItem(itemId, userDetailsImpl.getUsername());
+    BaseResponse response = auctionService.cancelItem(itemId, userDetailsImpl.getUsername());
     return ResponseEntity.ok().body(response);
   }
 
