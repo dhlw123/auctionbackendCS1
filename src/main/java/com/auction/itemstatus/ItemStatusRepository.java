@@ -2,6 +2,7 @@ package com.auction.itemstatus;
 
 import com.auction.items.Item;
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -31,4 +32,6 @@ public interface ItemStatusRepository extends JpaRepository<ItemStatus, Long> {
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   @Query(value = "SELECT s FROM ItemStatus s WHERE s.item.itemId = :itemId")
   ItemStatus findByItemWithLockByItemId(@Param("itemId") Long itemId);
+
+  List<ItemStatus> findByItemStatusAndEndTimeBefore(String itemStatus, Long endTime);
 }

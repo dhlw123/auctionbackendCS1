@@ -1,6 +1,7 @@
 package com.auction.admin;
 
 import com.auction.admin.dto.*;
+import com.auction.auctionorchestration.helper.AuctionFinalizer;
 import com.auction.auth.AuthService;
 import com.auction.auth.RevokedToken;
 import com.auction.auth.RevokedTokenRepository;
@@ -27,6 +28,7 @@ public class AdminService {
   private final AuthService authService;
   private final PasswordEncoder passwordEncoder;
   private final RevokedTokenRepository revokedTokenRepository;
+  private final AuctionFinalizer auctionFinalizer;
 
   // Chuỗi mã băm dùng để thay thế mật khẩu của người dùng khi bị khóa tài khoản
   @Value("${ban_hash}")
@@ -37,12 +39,14 @@ public class AdminService {
       UserService userService,
       AuthService authService,
       PasswordEncoder passwordEncoder,
-      RevokedTokenRepository revokedTokenRepository) {
+      RevokedTokenRepository revokedTokenRepository,
+      AuctionFinalizer auctionFinalizer) {
     this.itemService = itemService;
     this.userService = userService;
     this.authService = authService;
     this.passwordEncoder = passwordEncoder;
     this.revokedTokenRepository = revokedTokenRepository;
+    this.auctionFinalizer = auctionFinalizer;
   }
 
   /**
@@ -108,5 +112,10 @@ public class AdminService {
     revokedTokenRepository.deleteById(request.username());
 
     return new BaseResponse(true, "Succesfully unbanned user.");
+  }
+
+  public BaseResponse finalizeExpiredAuctions() {
+    auctionFinalizer.finalizeExpiredAuctions();
+    return new BaseResponse(true, "Finalized expired auctions");
   }
 }

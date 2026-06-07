@@ -235,3 +235,7 @@ class AdminSession(AuthSession):
 
     def cancel_auction_raw(self, item_id: int) -> requests.Response:
         return self.client.post(f"/admin/cancel/{item_id}", token=self.access_token, raw=True)
+
+    def finalize_expired_auctions(self) -> BaseResponse:
+        r = self.client.post("/admin/finalize", token=self.access_token)
+        return BaseResponse.from_response(r)

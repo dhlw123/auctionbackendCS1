@@ -1,9 +1,7 @@
 package com.auction.auctionorchestration.helper;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.auction.items.Item;
@@ -69,18 +67,14 @@ class BidValidatorTest {
   }
 
   @Test
-  void auctionEndedOrNot_TimeExpired_UpdatesStatusAndReturnsTrue() {
+  void auctionEndedOrNot_TimeExpired_ReturnsTrue() {
     Long itemId = 1L;
     testItemStatus.setEndTime(Instant.now().toEpochMilli() - 100000L);
     when(itemStatusService.getItemStatus(itemId)).thenReturn(testItemStatus);
-    when(itemService.getItem(itemId)).thenReturn(testItem);
 
     boolean result = bidValidator.auctionEndedOrNot(itemId);
 
     assertTrue(result);
-    assertEquals("ENDED", testItemStatus.getItemStatus());
-    verify(itemStatusService).saveStatus(testItemStatus);
-    verify(userService).addBalance("testuser", 10.0);
   }
 
   @Test

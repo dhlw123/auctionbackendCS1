@@ -66,4 +66,10 @@ public class AdminController {
     BaseResponse response = adminService.unbanUser(request);
     return ResponseEntity.ok().body(response);
   }
+
+  @PostMapping("/finalize")
+  public ResponseEntity<BaseResponse> finalizeExpired() {
+    BaseResponse response = adminService.finalizeExpiredAuctions();
+    return ResponseEntity.ok(response);
+  }
 }

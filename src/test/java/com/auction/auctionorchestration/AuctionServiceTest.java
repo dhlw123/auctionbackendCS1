@@ -70,8 +70,7 @@ class AuctionServiceTest {
 
   @BeforeEach
   void setUp() {
-    BidValidator bidValidator = new BidValidator(itemStatusService, itemService, userService, null);
-    ReflectionTestUtils.setField(bidValidator, "self", bidValidator);
+    BidValidator bidValidator = new BidValidator(itemStatusService, itemService, userService);
     AutoBidResolver autoBidResolver = new AutoBidResolver(bidService, userService);
 
     ReflectionTestUtils.setField(auctionService, "bidValidator", bidValidator);
