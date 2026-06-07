@@ -1,22 +1,22 @@
 package com.auction.auth;
 
-import java.time.Instant;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.time.Instant;
 
 /**
- * Thực thể RefreshToken đại diện cho mã làm mới (Refresh Token) được sử dụng để gia hạn Access Token.
- * Được lưu vào cơ sở dữ liệu để kiểm soát phiên làm việc của người dùng.
+ * Thực thể RefreshToken đại diện cho mã làm mới (Refresh Token) được sử dụng để gia hạn Access
+ * Token. Được lưu vào cơ sở dữ liệu để kiểm soát phiên làm việc của người dùng.
  */
 @Entity
 @Table(name = "refresh_tokens")
 public class RefreshToken {
 
-    // Tên đăng nhập của người dùng (Khóa chính), mỗi tài khoản chỉ có tối đa một Refresh Token tại một thời điểm
+    // Tên đăng nhập của người dùng (Khóa chính), mỗi tài khoản chỉ có tối đa một Refresh Token tại
+    // một thời điểm
     @Id
     @Column(name = "username")
     private String username;
@@ -32,17 +32,14 @@ public class RefreshToken {
     /**
      * Sự kiện Jpa Lifecycle Callback: Tự động ghi nhận thời điểm tạo Token trước khi lưu vào DB.
      */
-    @PrePersist
-    void addTime() {
-        this.createdAt = Instant.now().toEpochMilli();
-    }
 
-    protected RefreshToken() {
-    }
 
-    public RefreshToken(String username, String refreshToken) {
+    protected RefreshToken() {}
+
+    public RefreshToken(String username, String refreshToken, Long createdAt) {
         this.username = username;
         this.refreshToken = refreshToken;
+        this.createdAt = createdAt;
     }
 
     public String getUsername() {
@@ -63,5 +60,9 @@ public class RefreshToken {
 
     public Long getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
     }
 }

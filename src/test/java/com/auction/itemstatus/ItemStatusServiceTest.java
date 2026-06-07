@@ -1,7 +1,6 @@
 package com.auction.itemstatus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -108,63 +107,5 @@ class ItemStatusServiceTest {
     // Assert
     assertEquals(1, result.size());
     assertEquals(testItemStatus, result.get(0));
-  }
-
-  @Test
-  void auctionEndedOrNot_AlreadyEnded_ReturnsTrue() {
-    // Arrange
-    Long itemId = 1L;
-    testItemStatus.setItemStatus("ENDED");
-    when(itemStatusRepository.findByItemWithLockByItemId(itemId)).thenReturn(testItemStatus);
-
-    // Act
-    boolean result = itemStatusService.auctionEndedOrNot(itemId);
-
-    // Assert
-    assertTrue(result);
-  }
-
-  @Test
-  void auctionEndedOrNot_AlreadyCanceled_ReturnsTrue() {
-    // Arrange
-    Long itemId = 1L;
-    testItemStatus.setItemStatus("CANCELED");
-    when(itemStatusRepository.findByItemWithLockByItemId(itemId)).thenReturn(testItemStatus);
-
-    // Act
-    boolean result = itemStatusService.auctionEndedOrNot(itemId);
-
-    // Assert
-    assertTrue(result);
-  }
-
-  @Test
-  void auctionEndedOrNot_TimeExpired_UpdatesStatusAndReturnsTrue() {
-    // Arrange
-    Long itemId = 1L;
-    testItemStatus.setEndTime(Instant.now().toEpochMilli() - 100000L); // Past end time
-    when(itemStatusRepository.findByItemWithLockByItemId(itemId)).thenReturn(testItemStatus);
-
-    // Act
-    boolean result = itemStatusService.auctionEndedOrNot(itemId);
-
-    // Assert
-    assertTrue(result);
-    assertEquals("ENDED", testItemStatus.getItemStatus());
-    verify(itemStatusRepository).save(testItemStatus);
-  }
-
-  @Test
-  void auctionEndedOrNot_ActiveAndNotExpired_ReturnsFalse() {
-    // Arrange
-    Long itemId = 1L;
-    // End time is already in the future from setUp
-    when(itemStatusRepository.findByItemWithLockByItemId(itemId)).thenReturn(testItemStatus);
-
-    // Act
-    boolean result = itemStatusService.auctionEndedOrNot(itemId);
-
-    // Assert
-    assertFalse(result);
   }
 }

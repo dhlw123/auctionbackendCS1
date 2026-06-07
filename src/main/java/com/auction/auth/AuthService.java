@@ -1,14 +1,5 @@
 package com.auction.auth;
 
-import java.time.Instant;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.auction.auth.dto.AuthResponse;
 import com.auction.auth.dto.LoginRequest;
 import com.auction.auth.dto.RegisterRequest;
@@ -18,10 +9,15 @@ import com.auction.common.BaseException;
 import com.auction.common.BaseResponse;
 import com.auction.users.User;
 import com.auction.users.UserService;
+import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service xử lý các nghiệp vụ đăng ký, đăng nhập, đăng xuất và gia hạn token của người dùng.
- */
+/** Service xử lý các nghiệp vụ đăng ký, đăng nhập, đăng xuất và gia hạn token của người dùng. */
 @Service
 public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
@@ -41,7 +37,7 @@ public class AuthService {
     private String banHash;
 
     public AuthService(RefreshTokenRepository refreshTokenRepository, JwtUtil jwtUtil,
-                       PasswordEncoder passwordEncoder, UserService userService) {
+            PasswordEncoder passwordEncoder, UserService userService) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
@@ -61,18 +57,22 @@ public class AuthService {
                 .orElseThrow(() -> new BaseException("invalid refresh token"));
 
         // Kiểm tra xem Refresh Token đã hết hạn chưa
-        boolean isTokenExpired = token.getCreatedAt() + refreshLifetime < Instant.now().toEpochMilli();
+        boolean isTokenExpired =
+                token.getCreatedAt() + refreshLifetime < Instant.now().toEpochMilli();
         if (isTokenExpired) {
             throw new BaseException("Refresh token has expired, please login again");
         }
 
         // Tạo token mới và cập nhật lại vào DB
-        String newRefreshToken = jwtUtil.generateRefreshToken(token.getUsername());
-        token.setRefreshToken(newRefreshToken);
+        String newRefreshTokenKey = jwtUtil.generateRefreshToken(token.getUsername());
+        Long currentTime = Instant.now().toEpochMilli();
+        RefreshToken newRefreshToken =
+                new RefreshToken(token.getUsername(), newRefreshTokenKey, currentTime);
         String accessToken = jwtUtil.generateToken(token.getUsername());
-        refreshTokenRepository.save(token);
+        refreshTokenRepository.save(newRefreshToken);
 
-        return new AuthResponse(true, "successfully refresh token", accessToken, newRefreshToken);
+        return new AuthResponse(true, "successfully refresh token", accessToken,
+                newRefreshTokenKey);
     }
 
     /**
@@ -121,15 +121,17 @@ public class AuthService {
 
         String accessToken = jwtUtil.generateToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
-
-        refreshTokenRepository.save(new RefreshToken(user.getUsername(), refreshToken));
+        Long currentTime = Instant.now().toEpochMilli();
+        refreshTokenRepository
+                .save(new RefreshToken(user.getUsername(), refreshToken, currentTime));
 
         log.info("User logged in: {}", user.getUsername());
         return new AuthResponse(true, "Successfully logged in.", accessToken, refreshToken);
     }
 
     /**
-     * Thu hồi/xóa bỏ Refresh Token của người dùng khỏi DB khi đăng xuất hoặc tài khoản bị vô hiệu hóa.
+     * Thu hồi/xóa bỏ Refresh Token của người dùng khỏi DB khi đăng xuất hoặc tài khoản bị vô hiệu
+     * hóa.
      *
      * @param username Tên đăng nhập người dùng cần thu hồi
      */
@@ -151,4 +153,5 @@ public class AuthService {
         log.info("User logged out: {}", username);
         return new BaseResponse(true, "successfully logout");
     }
+
 }

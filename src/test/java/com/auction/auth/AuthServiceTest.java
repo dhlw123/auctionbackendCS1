@@ -119,7 +119,7 @@ class AuthServiceTest {
             });
     assertEquals("Invalid username or password", exception.getMessage());
   }
-  
+
   @Test
   void loginUser_BannedUser_ThrowsException() {
     // Arrange

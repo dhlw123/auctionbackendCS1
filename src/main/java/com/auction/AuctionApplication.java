@@ -8,12 +8,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class AuctionApplication {
 
-    private static final Logger log = LoggerFactory.getLogger(AuctionApplication.class);
+  private static final Logger log = LoggerFactory.getLogger(AuctionApplication.class);
 
-    public static void main(String[] args) {
-        System.out.println("Hello Bob the Builder");
-        log.info("Starting AuctionApplication");
-        SpringApplication.run(AuctionApplication.class, args);
-    }
-
+  public static void main(String[] args) {
+    System.out.println("Hello Bob the Builder");
+    log.info("Starting AuctionApplication");
+    SpringApplication.run(AuctionApplication.class, args);
+  }
 }
