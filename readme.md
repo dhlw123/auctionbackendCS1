@@ -48,21 +48,8 @@ Dự án này là hệ thống Backend cho sàn đấu giá trực tuyến thờ
 
 Dự án áp dụng mô hình kiến trúc phân lớp chuẩn (Layered Architecture) kết hợp với Reactive Streams (SSE) để xử lý các luồng dữ liệu thời gian thực.
 
-```mermaid
-graph TD
-    Client[Client Browser / Mobile] -->|1. Xác thực & Lấy JWT| AuthController[AuthController]
-    Client -->|2. Đăng bán / Xem sản phẩm| ItemController[ItemController]
-    Client -->|3. Đặt cược / Auto-Bid / Mua ngay| AuctionController[AuctionController]
-    Client -->|4. Đăng ký nhận luồng SSE| SSE[Server-Sent Events Flux]
-    
-    AuctionController -->|Điều phối luồng nghiệp vụ| AuctionService[AuctionService]
-    AuctionService -->|Ghi dữ liệu| DB[(SQLite Database)]
-    AuctionService -->|Phát biến động giá| ItemPricesSink[ItemPricesSink]
-    AuctionService -->|Phát biến động số dư| UserBalanceSink[UserBalanceSink]
-    
-    ItemPricesSink -->|Đẩy sự kiện giá mới| SSE
-    UserBalanceSink -->|Đẩy sự kiện số dư mới| SSE
-```
+<img width="1294" height="598" alt="image" src="https://github.com/user-attachments/assets/5d222ee5-5b5a-42ae-9ea2-4ad76938c09f" />
+
 
 ### Chi tiết các lớp:
 *   **Controller Layer (`*Controller.java`):** Tiếp nhận HTTP Request từ client, thực hiện validate dữ liệu đầu vào thông qua các annotations `@Valid` và điều hướng tới Service tương ứng.
