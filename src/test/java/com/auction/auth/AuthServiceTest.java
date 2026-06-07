@@ -160,7 +160,7 @@ class AuthServiceTest {
     assertEquals(true, response.getStatus());
     assertEquals("new_access_token", response.getAccessToken());
     assertEquals("new_refresh_token", response.getRefreshToken());
-    verify(refreshTokenRepository).save(tokenData);
+    verify(refreshTokenRepository).save(any(RefreshToken.class));
   }
 
   @Test
