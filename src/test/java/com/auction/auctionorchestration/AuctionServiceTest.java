@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,7 +70,7 @@ class AuctionServiceTest {
 
   @BeforeEach
   void setUp() {
-    BidValidator bidValidator = new BidValidator(itemStatusService);
+    BidValidator bidValidator = new BidValidator(itemStatusService, itemService, userService);
     AutoBidResolver autoBidResolver = new AutoBidResolver(bidService, userService);
 
     ReflectionTestUtils.setField(auctionService, "bidValidator", bidValidator);
@@ -98,11 +97,6 @@ class AuctionServiceTest {
         testItemStatus, "maxEndTime", Instant.now().toEpochMilli() + 7200000L); // 2 giờ max
   }
 
-  /** Thiết lập mock chung cho các validation cơ bản (auction chưa kết thúc). */
-  private void setupBasicValidationMocks() {
-    lenient().when(itemStatusService.auctionEndedOrNot(ITEM_ID)).thenReturn(false);
-  }
-
   // ========================================================================
   // Nhóm test: createBid (Đặt cược thủ công)
   // ========================================================================
@@ -115,7 +109,6 @@ class AuctionServiceTest {
     void createBid_FirstBid_Success() {
       // Arrange
       BidPostRequest request = new BidPostRequest(ITEM_ID, 1050.0);
-      setupBasicValidationMocks();
 
       when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
       when(userService.getUserRef("bidder1")).thenReturn(bidder1);
@@ -139,7 +132,6 @@ class AuctionServiceTest {
       // Arrange
       BidPostRequest request = new BidPostRequest(ITEM_ID, 1100.0);
       Bid existingBid = new Bid(testItem, bidder1, 1050.0);
-      setupBasicValidationMocks();
 
       when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
       when(userService.getUserRef("bidder1")).thenReturn(bidder1);
@@ -197,8 +189,8 @@ class AuctionServiceTest {
 
       when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
       when(userService.getUserRef("bidder1")).thenReturn(bidder1);
+      testItemStatus.setItemStatus("ENDED");
       when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
-      when(itemStatusService.auctionEndedOrNot(ITEM_ID)).thenReturn(true);
 
       // Act & Assert
       BaseException ex =
@@ -212,7 +204,6 @@ class AuctionServiceTest {
       // Arrange
       User poorBidder = new User("poor", "Poor User", "hashedpw", 100.0);
       BidPostRequest request = new BidPostRequest(ITEM_ID, 1050.0);
-      setupBasicValidationMocks();
 
       when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
       when(userService.getUserRef("poor")).thenReturn(poorBidder);
@@ -231,7 +222,6 @@ class AuctionServiceTest {
       testItemStatus.setCurrentPrice(1050.0);
       testItemStatus.setHighestBidUser("bidder2");
       BidPostRequest request = new BidPostRequest(ITEM_ID, 1080.0);
-      setupBasicValidationMocks();
 
       when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
       when(userService.getUserRef("bidder1")).thenReturn(bidder1);
@@ -250,7 +240,6 @@ class AuctionServiceTest {
       testItemStatus.setCurrentPrice(1050.0);
       testItemStatus.setHighestBidUser("bidder2");
       BidPostRequest request = new BidPostRequest(ITEM_ID, 1100.0);
-      setupBasicValidationMocks();
 
       when(itemService.getItemRef(ITEM_ID)).thenReturn(testItem);
       when(userService.getUserRef("bidder1")).thenReturn(bidder1);
@@ -280,7 +269,6 @@ class AuctionServiceTest {
       // Arrange
       testItemStatus.setCurrentPrice(1050.0);
       testItemStatus.setHighestBidUser("bidder2");
-      setupBasicValidationMocks();
 
       when(itemStatusService.getItemStatus(ITEM_ID)).thenReturn(testItemStatus);
       when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
@@ -325,7 +313,6 @@ class AuctionServiceTest {
     void createAutoBid_NewAutoBid_Success() {
       // Arrange
       AutoBidRequest request = new AutoBidRequest(ITEM_ID, 1500.0);
-      setupBasicValidationMocks();
 
       when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
       when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.empty());
@@ -349,7 +336,6 @@ class AuctionServiceTest {
       testItemStatus.setHighestBidUser("bidder1");
       AutoBid existingAutoBid = new AutoBid(ITEM_ID, bidder1, 1500.0, 1050.0);
       AutoBidRequest request = new AutoBidRequest(ITEM_ID, 2000.0);
-      setupBasicValidationMocks();
 
       when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
       when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(existingAutoBid));
@@ -373,7 +359,6 @@ class AuctionServiceTest {
       testItemStatus.setHighestBidUser("bidder1");
       AutoBid existingAutoBid = new AutoBid(ITEM_ID, bidder1, 1500.0, 1050.0);
       AutoBidRequest request = new AutoBidRequest(ITEM_ID, 1200.0);
-      setupBasicValidationMocks();
 
       when(userService.getUserByUsername("bidder1")).thenReturn(bidder1);
       when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(existingAutoBid));
@@ -397,7 +382,6 @@ class AuctionServiceTest {
       testItemStatus.setHighestBidUser("bidder1");
       AutoBid existingAutoBid = new AutoBid(ITEM_ID, bidder1, 1300.0, 1050.0);
       AutoBidRequest request = new AutoBidRequest(ITEM_ID, 1500.0);
-      setupBasicValidationMocks();
 
       when(userService.getUserByUsername("bidder2")).thenReturn(bidder2);
       when(bidService.getAutoBidByItemId(ITEM_ID)).thenReturn(Optional.of(existingAutoBid));

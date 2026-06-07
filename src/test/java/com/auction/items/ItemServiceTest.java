@@ -8,6 +8,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.auction.auctionorchestration.helper.BidValidator;
 import com.auction.bids.BidRepository;
 import com.auction.common.BaseException;
 import com.auction.common.BaseObjectResponse;
@@ -37,6 +38,8 @@ class ItemServiceTest {
   @Mock private ItemStatusService itemStatusService;
 
   @Mock private BidRepository bidRepository;
+
+  @Mock private BidValidator bidValidator;
 
   @InjectMocks private ItemService itemService;
 
@@ -89,7 +92,7 @@ class ItemServiceTest {
 
     when(itemRepository.findById(itemId)).thenReturn(Optional.of(testItem));
     when(itemStatusService.getItemStatus(itemId)).thenReturn(testItemStatus);
-    when(itemStatusService.auctionEndedOrNot(itemId)).thenReturn(false);
+    when(bidValidator.auctionEndedOrNot(itemId)).thenReturn(false);
 
     // Act
     BaseResponse response = itemService.cancelItem(itemId, username);
@@ -149,7 +152,7 @@ class ItemServiceTest {
     when(itemRepository.findById(itemId)).thenReturn(Optional.of(testItem));
     when(itemStatusService.getItemStatus(itemId)).thenReturn(testItemStatus);
 
-    lenient().when(itemStatusService.auctionEndedOrNot(itemId)).thenReturn(false);
+    lenient().when(bidValidator.auctionEndedOrNot(itemId)).thenReturn(false);
 
     // Act & Assert
     BaseException exception =

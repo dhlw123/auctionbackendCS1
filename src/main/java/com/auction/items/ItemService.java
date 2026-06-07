@@ -12,6 +12,7 @@ import com.auction.users.UserService;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,11 +33,14 @@ public class ItemService {
     @Value("${max_extra_time}")
     private Long maxExtraTime;
 
+    private final BidValidator bidValidator;
+
     public ItemService(ItemRepository itemRepository, UserService userService,
-            ItemStatusService itemStatusService) {
+            ItemStatusService itemStatusService, @Lazy BidValidator bidValidator) {
         this.itemRepository = itemRepository;
         this.userService = userService;
         this.itemStatusService = itemStatusService;
+        this.bidValidator = bidValidator;
     }
 
     /**
@@ -86,7 +90,7 @@ public class ItemService {
         ItemStatus status = itemStatusService.getItemStatus(itemId);
         // Chỉ cho phép hủy các sản phẩm có trạng thái đấu giá là ACTIVE và chưa thực sự kết thúc
         if (!"ACTIVE".equals(status.getItemStatus())
-                || itemStatusService.auctionEndedOrNot(itemId)) {
+                || bidValidator.auctionEndedOrNot(itemId)) {
             throw new BaseException("Only ACTIVE items can be canceled.");
         }
 
