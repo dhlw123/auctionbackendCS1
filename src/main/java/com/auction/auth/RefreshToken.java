@@ -15,50 +15,54 @@ import java.time.Instant;
 @Table(name = "refresh_tokens")
 public class RefreshToken {
 
-  // Tên đăng nhập của người dùng (Khóa chính), mỗi tài khoản chỉ có tối đa một Refresh Token tại
-  // một thời điểm
-  @Id
-  @Column(name = "username")
-  private String username;
+    // Tên đăng nhập của người dùng (Khóa chính), mỗi tài khoản chỉ có tối đa một Refresh Token tại
+    // một thời điểm
+    @Id
+    @Column(name = "username")
+    private String username;
 
-  // Giá trị của mã Refresh Token mã hóa dạng JWT
-  @Column(name = "token")
-  private String refreshToken;
+    // Giá trị của mã Refresh Token mã hóa dạng JWT
+    @Column(name = "token")
+    private String refreshToken;
 
-  // Thời gian tạo Refresh Token (Epoch Milliseconds)
-  @Column(name = "created_at")
-  private Long createdAt;
+    // Thời gian tạo Refresh Token (Epoch Milliseconds)
+    @Column(name = "created_at")
+    private Long createdAt;
 
-  /** Sự kiện Jpa Lifecycle Callback: Tự động ghi nhận thời điểm tạo Token trước khi lưu vào DB. */
-  @PrePersist
-  void addTime() {
-    this.createdAt = Instant.now().toEpochMilli();
-  }
+    /**
+     * Sự kiện Jpa Lifecycle Callback: Tự động ghi nhận thời điểm tạo Token trước khi lưu vào DB.
+     */
 
-  protected RefreshToken() {}
 
-  public RefreshToken(String username, String refreshToken) {
-    this.username = username;
-    this.refreshToken = refreshToken;
-  }
+    protected RefreshToken() {}
 
-  public String getUsername() {
-    return username;
-  }
+    public RefreshToken(String username, String refreshToken, Long createdAt) {
+        this.username = username;
+        this.refreshToken = refreshToken;
+        this.createdAt = createdAt;
+    }
 
-  public void setUsername(String username) {
-    this.username = username;
-  }
+    public String getUsername() {
+        return username;
+    }
 
-  public String getRefreshToken() {
-    return refreshToken;
-  }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-  public void setRefreshToken(String refreshToken) {
-    this.refreshToken = refreshToken;
-  }
+    public String getRefreshToken() {
+        return refreshToken;
+    }
 
-  public Long getCreatedAt() {
-    return createdAt;
-  }
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
+    }
 }

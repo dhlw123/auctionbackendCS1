@@ -7,8 +7,11 @@ import com.auction.itemstatus.ItemStatus;
 import com.auction.itemstatus.ItemStatusService;
 import com.auction.users.User;
 import com.auction.users.UserService;
-import org.springframework.stereotype.Component;
 import java.time.Instant;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class BidValidator {
@@ -16,12 +19,14 @@ public class BidValidator {
     private final ItemStatusService itemStatusService;
     private final ItemService itemService;
     private final UserService userService;
+    private final BidValidator self;
 
     public BidValidator(ItemStatusService itemStatusService, ItemService itemService,
-            UserService userService) {
+            UserService userService, @Lazy BidValidator self) {
         this.itemStatusService = itemStatusService;
         this.itemService = itemService;
         this.userService = userService;
+        this.self = self;
     }
 
     public void validate(Item item, User user, ItemStatus itemStatus, Double value) {
@@ -43,7 +48,7 @@ public class BidValidator {
     }
 
     public void validateAuctionActive(Long itemId) {
-        if (auctionEndedOrNot(itemId)) {
+        if (self.auctionEndedOrNot(itemId)) {
             throw new BaseException("Auction has already ended");
         }
     }
@@ -55,18 +60,14 @@ public class BidValidator {
     }
 
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean auctionEndedOrNot(Long itemId) {
         ItemStatus itemStatus = itemStatusService.getItemStatus(itemId);
-        // ItemStatus itemStatus = itemStatusRepository.findByItemWithLockByItemId(itemId);
 
-        // Nếu đã ở trạng thái ENDED hoặc CANCELED thì chắc chắn phiên đấu giá đã dừng
         if (itemStatus.getItemStatus().equals("ENDED")
                 || itemStatus.getItemStatus().equals("CANCELED")) {
             return true;
         }
-        // Nếu đã qua thời gian kết thúc dự kiến nhưng trạng thái chưa cập nhật, đổi sang ENDED và
-        // lưu
-        // lại DB
         else if (itemStatus.getEndTime() < Instant.now().toEpochMilli()) {
             itemStatus.setItemStatus("ENDED");
             itemStatusService.saveStatus(itemStatus);
@@ -74,7 +75,6 @@ public class BidValidator {
             userService.addBalance(seller.getUsername(), itemStatus.getCurrentPrice());
             return true;
         }
-        // Ngược lại, phiên đấu giá vẫn đang mở
         else {
             return false;
         }
