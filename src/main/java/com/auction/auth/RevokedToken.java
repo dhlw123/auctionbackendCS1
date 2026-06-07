@@ -22,8 +22,7 @@ public class RevokedToken {
     @Column(name = "banned_at", nullable = false)
     private Long bannedAt;
 
-    protected RevokedToken() {
-    }
+    protected RevokedToken() {}
 
     public RevokedToken(String username, Long bannedAt) {
         this.username = username;

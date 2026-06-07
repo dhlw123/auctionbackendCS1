@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.auction.auth.dto.AuthResponse;
 import com.auction.auth.dto.LoginRequest;
@@ -22,6 +24,8 @@ import com.auction.users.UserService;
  */
 @Service
 public class AuthService {
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtil jwtUtil;
 
@@ -77,6 +81,7 @@ public class AuthService {
      * @param request Yêu cầu đăng ký chứa username, displayName, password
      * @return BaseResponse phản hồi trạng thái
      */
+    @Transactional
     public BaseResponse userRegister(RegisterRequest request) {
         // Kiểm tra tên tài khoản đã được đăng ký trước đó chưa
         if (userService.existsUsername(request.username())) {
@@ -89,6 +94,7 @@ public class AuthService {
         // Tạo người dùng mới với số dư ví mặc định là 0.0
         User user = new User(request.username(), request.displayName(), hashedPassword, 0.0);
         userService.saveUser(user);
+        log.info("User registered: {}", request.username());
         return new BaseResponse(true, "Successfully registered.");
     }
 
@@ -104,21 +110,21 @@ public class AuthService {
 
         // Kiểm tra xem người dùng có bị cấm (banned) hay không
         if (user.getHashedPassword().equals(banHash)) {
+            log.warn("Banned user attempted login: {}", request.username());
             throw new BaseException("User was banned");
         }
 
-        // Kiểm tra tính chính xác của mật khẩu
         if (!passwordEncoder.matches(request.password(), user.getHashedPassword())) {
+            log.warn("Failed login attempt for user: {}", request.username());
             throw new BaseException("Invalid username or password");
         }
 
-        // Tạo mã Access Token và Refresh Token mới
         String accessToken = jwtUtil.generateToken(user.getUsername());
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
 
-        // Lưu thông tin Refresh Token vào cơ sở dữ liệu để phục vụ kiểm tra và gia hạn sau này
         refreshTokenRepository.save(new RefreshToken(user.getUsername(), refreshToken));
 
+        log.info("User logged in: {}", user.getUsername());
         return new AuthResponse(true, "Successfully logged in.", accessToken, refreshToken);
     }
 
@@ -140,7 +146,9 @@ public class AuthService {
      */
     @Transactional
     public BaseResponse logoutUser(UserDetailsImpl userDetailsImpl) {
-        revokeToken(userDetailsImpl.getUsername());
+        String username = userDetailsImpl.getUsername();
+        revokeToken(username);
+        log.info("User logged out: {}", username);
         return new BaseResponse(true, "successfully logout");
     }
 }

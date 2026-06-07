@@ -77,18 +77,24 @@
             FilterChain filterChain
         ) throws ServletException, IOException {
             String encodedToken = parseJwt(request);
-            boolean isTokenValidated;
-            
-            try {
-                // Xác thực chữ ký và tính hợp lệ của Token
-                isTokenValidated = jwtUtil.validateJwtToken(encodedToken);
-            } catch (JwtExpiredException e) {
-                // Nếu token hết hạn, chuyển tiếp ngoại lệ cho HandlerExceptionResolver xử lý và phản hồi HTTP 498
-                resolver.resolveException(request, response, null, e);
-                isTokenValidated = false;
+
+
+            // If no header then let Spring Security Handle.
+            if (encodedToken == null) {
+                filterChain.doFilter(request, response);
+                return;
             }
 
-            if (encodedToken != null && isTokenValidated) {
+            boolean isTokenValidated;
+
+            try {
+                isTokenValidated = jwtUtil.validateJwtToken(encodedToken);
+            } catch (JwtExpiredException e) {
+                resolver.resolveException(request, response, null, e);
+                return;
+            }
+
+            if (isTokenValidated) {
                 String username = jwtUtil.getUserFromToken(encodedToken);
                 Date issuedAt = jwtUtil.getIssuedAtFromToken(encodedToken);
 

@@ -115,6 +115,7 @@ public class SecurityConfig {
                 jwtSecurityFilter,
                 UsernamePasswordAuthenticationFilter.class
         );
+        http.logout(logout -> logout.disable());
         return http.build();
     }
 }

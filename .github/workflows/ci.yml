@@ -32,3 +32,43 @@ jobs:
 
     - name: Build Project
       run: ./gradlew build -x test
+
+    - name: Start server for API tests
+      run: |
+        java -jar build/libs/auction-0.0.1-SNAPSHOT.jar &
+        echo $! > /tmp/server.pid
+        # Wait for server to be ready
+        for i in $(seq 1 60); do
+          if curl -sf http://localhost:8080/items/all >/dev/null 2>&1; then
+            echo "Server ready after ${i}s"
+            break
+          fi
+          sleep 1
+        done
+        # Seed admin user
+        curl -sf -X POST http://localhost:8080/login \
+          -H "Content-Type: application/json" \
+          -d '{"username":"admin","password":"admin"}' >/dev/null 2>&1 || \
+        curl -s -X POST http://localhost:8080/register \
+          -H "Content-Type: application/json" \
+          -d '{"username":"admin","displayName":"Administrator","password":"admin"}'
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Python dependencies
+      run: pip install pytest requests
+
+    - name: Run API tests
+      run: |
+        python -m pytest tests_api/ -v --tb=short
+      env:
+        API_BASE_URL: http://localhost:8080
+        ADMIN_USERNAME: admin
+        ADMIN_PASSWORD: admin
+
+    - name: Stop server
+      if: always()
+      run: kill $(cat /tmp/server.pid) 2>/dev/null || true

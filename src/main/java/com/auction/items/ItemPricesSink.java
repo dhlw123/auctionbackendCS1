@@ -1,4 +1,4 @@
-package com.auction.common;
+package com.auction.items;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
