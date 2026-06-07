@@ -5,15 +5,15 @@ package com.auction.common;
  * Tự động đóng gói thông điệp lỗi thành một đối tượng BaseResponse thất bại.
  */
 public class BaseException extends RuntimeException {
-    // Đối tượng chứa thông tin phản hồi lỗi trả về cho client
-    BaseResponse response;
+  // Đối tượng chứa thông tin phản hồi lỗi trả về cho client
+  BaseResponse response;
 
-    public BaseException(String message) {
-        super(message);
-        this.response = new BaseResponse(false, message);
-    }
+  public BaseException(String message) {
+    super(message);
+    this.response = new BaseResponse(false, message);
+  }
 
-    public BaseResponse getResponse() {
-        return response;
-    }
+  public BaseResponse getResponse() {
+    return response;
+  }
 }
